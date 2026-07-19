@@ -4,6 +4,7 @@ import { auth } from './auth.svelte';
 import type {
 	Category,
 	Discussion,
+	DiscussionListItem,
 	DiscussionPage,
 	ReactionContent,
 	Reply,
@@ -87,6 +88,11 @@ export interface ForumOverview {
 	viewerPermission: RepositoryPermission;
 	/** First page of the all-topics feed (the home page) */
 	discussions: DiscussionPage;
+	/**
+	 * Discussions pinned on github.com (maintainers pin via the GitHub UI —
+	 * the API only exposes reading them). Shown above the regular list.
+	 */
+	pinned: DiscussionListItem[];
 }
 
 /**
@@ -113,6 +119,7 @@ async function fetchOverview(): Promise<ForumOverview> {
 			viewerPermission: RepositoryPermission | null;
 			discussionCategories: { nodes: Category[] };
 			discussions: DiscussionPage;
+			pinnedDiscussions: { nodes: { discussion: DiscussionListItem }[] };
 		};
 	}>(
 		`query ($owner: String!, $repo: String!, $first: Int!) {
@@ -123,6 +130,7 @@ async function fetchOverview(): Promise<ForumOverview> {
 				discussions(first: $first, orderBy: { field: ${forumConfig.content.sort}, direction: DESC }) {
 					${DISCUSSIONS_PAGE}
 				}
+				pinnedDiscussions(first: 10) { nodes { discussion { ${LIST_ITEM} } } }
 			}
 		}`,
 		{
@@ -133,12 +141,15 @@ async function fetchOverview(): Promise<ForumOverview> {
 	);
 	repoId = data.repository.id;
 	const { include, exclude } = forumConfig.content.topics;
+	const visible = (slug: string) =>
+		(include.length === 0 || include.includes(slug)) && !exclude.includes(slug);
 	return {
-		categories: data.repository.discussionCategories.nodes.filter(
-			(c) => (include.length === 0 || include.includes(c.slug)) && !exclude.includes(c.slug)
-		),
+		categories: data.repository.discussionCategories.nodes.filter((c) => visible(c.slug)),
 		viewerPermission: data.repository.viewerPermission ?? 'READ',
-		discussions: data.repository.discussions
+		discussions: data.repository.discussions,
+		pinned: data.repository.pinnedDiscussions.nodes
+			.map((n) => n.discussion)
+			.filter((d) => visible(d.category.slug))
 	};
 }
 
@@ -192,7 +203,7 @@ export async function getDiscussion(number: number): Promise<Discussion> {
 		`query ($owner: String!, $repo: String!, $number: Int!) {
 			repository(owner: $owner, name: $repo) {
 				discussion(number: $number) {
-					id number title body bodyHTML createdAt lastEditedAt
+					id number title body bodyHTML url createdAt lastEditedAt
 					upvoteCount viewerHasUpvoted locked
 					${ACTOR}
 					category { id name slug emojiHTML description isAnswerable }
@@ -240,6 +251,40 @@ export async function searchDiscussions(term: string): Promise<SearchResult> {
 /* --------- */
 /* Mutations */
 /* --------- */
+
+/**
+ * Edit a discussion's title, body, and/or category. GitHub only permits this
+ * for the author and users with repository write access; the UI gates on the
+ * same rule, and the API enforces it server-side regardless.
+ */
+export async function updateDiscussion(
+	discussionId: string,
+	changes: { title?: string; body?: string; categoryId?: string }
+): Promise<Pick<Discussion, 'title' | 'body' | 'bodyHTML' | 'category'>> {
+	const data = await gql<{
+		updateDiscussion: { discussion: Pick<Discussion, 'title' | 'body' | 'bodyHTML' | 'category'> };
+	}>(
+		`mutation ($input: UpdateDiscussionInput!) {
+			updateDiscussion(input: $input) {
+				discussion { title body bodyHTML category { ${CATEGORY_FIELDS} } }
+			}
+		}`,
+		{ input: { discussionId, ...changes } }
+	);
+	invalidateCache('discussion');
+	return data.updateDiscussion.discussion;
+}
+
+/** Permanently delete a discussion (author or repository write access only). */
+export async function deleteDiscussion(id: string): Promise<void> {
+	await gql(
+		`mutation ($input: DeleteDiscussionInput!) {
+			deleteDiscussion(input: $input) { clientMutationId }
+		}`,
+		{ input: { id } }
+	);
+	invalidateCache('discussion');
+}
 
 export async function createDiscussion(opts: {
 	categoryId: string;

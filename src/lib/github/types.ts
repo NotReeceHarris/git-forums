@@ -72,6 +72,8 @@ export interface Discussion {
 	title: string;
 	body: string;
 	bodyHTML: string;
+	/** Canonical github.com URL (used for the report-content link) */
+	url: string;
 	createdAt: string;
 	lastEditedAt: string | null;
 	upvoteCount: number;

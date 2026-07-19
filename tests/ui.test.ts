@@ -38,7 +38,8 @@ beforeEach(async () => {
 	getOverview.mockReset().mockResolvedValue({
 		categories: cats,
 		viewerPermission: 'READ',
-		discussions: feed
+		discussions: feed,
+		pinned: [{ id: 'p1' }]
 	});
 	localStorage.clear();
 	document.documentElement.className = '';
@@ -51,6 +52,7 @@ describe('loadOverview', () => {
 		expect(mod.ui.categories).toEqual(cats);
 		expect(mod.ui.viewerPermission).toBe('READ');
 		expect(mod.ui.home).toEqual(feed);
+		expect(mod.ui.pinned).toEqual([{ id: 'p1' }]);
 		expect(mod.ui.categoriesLoaded).toBe(true);
 		expect(getOverview).toHaveBeenCalledWith({ fresh: false });
 	});

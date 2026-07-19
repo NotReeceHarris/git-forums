@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { swr, writeCache } from '$lib/cache';
@@ -9,9 +10,18 @@
 	import SignInPrompt from '$lib/components/SignInPrompt.svelte';
 	import UserBadges from '$lib/components/UserBadges.svelte';
 	import { forumConfig } from '$lib/config';
-	import { addComment, getDiscussion, isArticle, toggleUpvote } from '$lib/github/api';
+	import {
+		addComment,
+		deleteDiscussion,
+		getDiscussion,
+		isArticle,
+		stripMarker,
+		toggleUpvote,
+		updateDiscussion
+	} from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { Comment, Discussion, Reply } from '$lib/github/types';
+	import { isMaintainer, ui } from '$lib/ui.svelte';
 	import { formatDate, timeAgo } from '$lib/utils';
 
 	let discussion = $state<Discussion | null>(null);
@@ -25,6 +35,75 @@
 
 	const number = $derived(Number(page.params.number));
 	const article = $derived(discussion ? isArticle(discussion.body) : false);
+
+	// GitHub only allows the author and users with repo write access to edit
+	// or delete a discussion — mirror that in the UI
+	const canModerate = $derived(
+		!!discussion &&
+			!!auth.viewer &&
+			(auth.viewer.login === discussion.author?.login || isMaintainer())
+	);
+	const reportUrl = $derived(
+		discussion
+			? `https://github.com/contact/report-content?content_url=${encodeURIComponent(discussion.url)}`
+			: '#'
+	);
+
+	// inline moderation editor
+	let editing = $state(false);
+	let editTitle = $state('');
+	let editCategoryId = $state('');
+	let editBody = $state('');
+	let editBusy = $state(false);
+	let editError = $state<string | null>(null);
+
+	function startEdit() {
+		if (!discussion) return;
+		editTitle = discussion.title;
+		editCategoryId = discussion.category.id;
+		editBody = stripMarker(discussion.body);
+		editError = null;
+		editing = true;
+	}
+
+	async function saveEdit(e: SubmitEvent) {
+		e.preventDefault();
+		if (!discussion || !editTitle.trim() || !editBody.trim()) return;
+		editBusy = true;
+		editError = null;
+		try {
+			// preserve the post's article/post type
+			const body = article
+				? `${forumConfig.content.articles.marker}\n\n${editBody}`
+				: editBody;
+			const updated = await updateDiscussion(discussion.id, {
+				title: editTitle.trim(),
+				body,
+				categoryId: editCategoryId
+			});
+			Object.assign(discussion, updated);
+			persist();
+			editing = false;
+		} catch (err) {
+			editError = err instanceof Error ? err.message : 'Failed to save changes.';
+		} finally {
+			editBusy = false;
+		}
+	}
+
+	let deleteBusy = $state(false);
+	async function removeDiscussion() {
+		if (!discussion || deleteBusy) return;
+		if (!confirm('Permanently delete this post and all its comments?')) return;
+		deleteBusy = true;
+		try {
+			await deleteDiscussion(discussion.id);
+			await goto(resolve('/'));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to delete the post.';
+			deleteBusy = false;
+		}
+	}
 
 	let loadedFor: number | null = null;
 	$effect(() => {
@@ -161,11 +240,96 @@
 					Locked
 				</span>
 			{/if}
+			{#if ui.pinned.some((p) => p.number === discussion?.number)}
+				<span class="inline-flex items-center gap-1 rounded-full border border-fd-border px-2 py-0.5 text-xs">
+					<svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1Z" /></svg>
+					Pinned
+				</span>
+			{/if}
+
+			<span class="ml-auto inline-flex items-center gap-1 text-xs">
+				{#if canModerate && !editing}
+					<button
+						type="button"
+						onclick={startEdit}
+						class="rounded-md px-2 py-1 font-medium text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground"
+					>
+						Edit
+					</button>
+					<button
+						type="button"
+						onclick={removeDiscussion}
+						disabled={deleteBusy}
+						class="rounded-md px-2 py-1 font-medium text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+					>
+						{deleteBusy ? 'Deleting…' : 'Delete'}
+					</button>
+				{/if}
+				<a
+					href={reportUrl}
+					target="_blank"
+					rel="noreferrer"
+					title="Report this content to GitHub"
+					class="rounded-md px-2 py-1 text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground"
+				>
+					Report
+				</a>
+			</span>
 		</div>
 
-		<div class="markdown mt-6 {article ? 'text-base leading-8' : ''}">
-			{@html discussion.bodyHTML}
-		</div>
+		{#if editing}
+			<form onsubmit={saveEdit} class="mt-6 flex flex-col gap-4 rounded-2xl border border-fd-border bg-fd-card p-4">
+				<div>
+					<label class="mb-1 block text-sm font-medium" for="dk-edit-title">Title</label>
+					<input
+						id="dk-edit-title"
+						type="text"
+						bind:value={editTitle}
+						maxlength="256"
+						class="w-full rounded-lg border border-fd-border bg-fd-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-fd-ring"
+					/>
+				</div>
+				<div>
+					<label class="mb-1 block text-sm font-medium" for="dk-edit-topic">Topic</label>
+					<select
+						id="dk-edit-topic"
+						bind:value={editCategoryId}
+						class="w-full rounded-lg border border-fd-border bg-fd-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-fd-ring sm:max-w-xs"
+					>
+						{#each ui.categories as category (category.id)}
+							<option value={category.id}>{category.name}</option>
+						{/each}
+					</select>
+				</div>
+				<div>
+					<span class="mb-1 block text-sm font-medium">Body</span>
+					<MarkdownEditor bind:value={editBody} rows={10} />
+				</div>
+				{#if editError}
+					<p class="rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-500">{editError}</p>
+				{/if}
+				<div class="flex justify-end gap-2">
+					<button
+						type="button"
+						onclick={() => (editing = false)}
+						class="rounded-lg px-4 py-2 text-sm text-fd-muted-foreground hover:bg-fd-accent"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						disabled={editBusy || !editTitle.trim() || !editBody.trim()}
+						class="rounded-lg bg-fd-primary px-4 py-2 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+					>
+						{editBusy ? 'Saving…' : 'Save changes'}
+					</button>
+				</div>
+			</form>
+		{:else}
+			<div class="markdown mt-6 {article ? 'text-base leading-8' : ''}">
+				{@html discussion.bodyHTML}
+			</div>
+		{/if}
 
 		<div class="mt-6 flex flex-wrap items-center gap-3 border-b border-fd-border pb-6">
 			{#if forumConfig.features.upvotes}

@@ -11,6 +11,8 @@ A fully featured forum site powered entirely by **GitHub Discussions** — no ba
 - **Comments, threaded replies, reactions, and upvotes** map 1:1 to Discussions features via the GitHub GraphQL API.
 - **Search** uses GitHub's discussion search scoped to the repo.
 - **Admins** are declared in [`forum.config.ts`](forum.config.ts) (`admins.logins`) and get an `ADMIN` badge everywhere they post.
+- **Moderation**: post authors and repository maintainers can edit a post's title, body, and topic, or delete it, straight from the thread page (GitHub enforces the same permissions server-side). Every post has a **Report** link that opens GitHub's report-content form.
+- **Pinned posts**: discussions pinned on github.com (Discussions → ⋯ → *Pin discussion*, maintainers only, up to 4) appear in a dedicated **Pinned** section above the list on the home page and on their topic's page. The GitHub API only exposes *reading* pins, so pinning/unpinning itself happens on github.com.
 - Post bodies are rendered by GitHub itself (`bodyHTML`), so you get GitHub-flavoured markdown, syntax highlighting markup, and sanitisation for free.
 
 > **Why is sign-in required to read?** GitHub Discussions is only exposed through the GraphQL API, which always requires authentication. There is no server here to hold a shared token, so each visitor authenticates with their own GitHub account.

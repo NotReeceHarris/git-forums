@@ -1,7 +1,12 @@
 import { swr } from './cache';
 import { forumConfig } from './config';
 import { getOverview } from './github/api';
-import type { Category, DiscussionPage, RepositoryPermission } from './github/types';
+import type {
+	Category,
+	DiscussionListItem,
+	DiscussionPage,
+	RepositoryPermission
+} from './github/types';
 
 /** Small cross-component UI state */
 export const ui = $state({
@@ -10,7 +15,9 @@ export const ui = $state({
 	categoriesLoaded: false,
 	viewerPermission: 'READ' as RepositoryPermission,
 	/** First page of the all-topics feed, shared by layout bootstrap and home */
-	home: null as DiscussionPage | null
+	home: null as DiscussionPage | null,
+	/** Discussions pinned on github.com, shown above regular lists */
+	pinned: [] as DiscussionListItem[]
 });
 
 /**
@@ -24,6 +31,7 @@ export async function loadOverview() {
 		ui.categories = data.categories;
 		ui.viewerPermission = data.viewerPermission;
 		ui.home = data.discussions;
+		ui.pinned = data.pinned;
 		ui.categoriesLoaded = true;
 	});
 }

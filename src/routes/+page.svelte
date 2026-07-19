@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import DiscussionRow from '$lib/components/DiscussionRow.svelte';
 	import Loading from '$lib/components/Loading.svelte';
+	import PinnedList from '$lib/components/PinnedList.svelte';
 	import SignInPrompt from '$lib/components/SignInPrompt.svelte';
 	import { forumConfig } from '$lib/config';
 	import { listDiscussions } from '$lib/github/api';
@@ -16,7 +17,11 @@
 	let loadingMore = $state(false);
 	let error = $state<string | null>(null);
 
-	const discussions = $derived([...(ui.home?.nodes ?? []), ...extra]);
+	// pinned posts render in their own section — keep them out of the feed
+	const pinnedIds = $derived(new Set(ui.pinned.map((p) => p.id)));
+	const discussions = $derived(
+		[...(ui.home?.nodes ?? []), ...extra].filter((d) => !pinnedIds.has(d.id))
+	);
 	const pageInfo = $derived(extraPageInfo ?? ui.home?.pageInfo ?? null);
 	const loading = $derived(ui.home === null);
 
@@ -82,6 +87,8 @@
 			{/each}
 		</div>
 	{/if}
+
+	<PinnedList discussions={ui.pinned} />
 
 	{#if error && discussions.length === 0}
 		<p class="rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-500">{error}</p>
