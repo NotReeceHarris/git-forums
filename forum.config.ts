@@ -2,7 +2,7 @@ import { defineForumConfig } from './src/lib/config/schema';
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- *  git-forums configuration
+ *  Discussion Kit configuration
  * ─────────────────────────────────────────────────────────────────────────────
  *  Every option is optional — anything you omit falls back to a sensible
  *  default (see src/lib/config/schema.ts for the full schema and defaults).
@@ -17,7 +17,7 @@ import { defineForumConfig } from './src/lib/config/schema';
  */
 export default defineForumConfig({
 	site: {
-		name: 'Git Forums',
+		name: 'Discussion Kit',
 		description: 'A community forum powered by GitHub Discussions',
 		// logo: '💬',                        // emoji shown instead of the default icon
 		footer: 'Powered by GitHub Discussions'
@@ -26,7 +26,7 @@ export default defineForumConfig({
 	repo: {
 		// Omit owner/name to auto-detect when building in GitHub Actions.
 		owner: 'NotReeceHarris',
-		name: 'git-forums'
+		name: 'discussion-kit'
 	},
 
 	// Extra header links
@@ -39,7 +39,7 @@ export default defineForumConfig({
 		oauth: {
 			// Fill both to enable the "Continue with GitHub" button (see README):
 			clientId: 'Ov23li1QctsLGHqbcIwq',
-			proxyUrl: 'https://git-forums-oauth.reeceharris.workers.dev'
+			proxyUrl: 'https://discussion-kit-oauth.reeceharris.workers.dev'
 		}
 	},
 

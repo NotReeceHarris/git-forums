@@ -1,5 +1,5 @@
 /**
- * GitHub OAuth token-exchange proxy for Git Forums.
+ * GitHub OAuth token-exchange proxy for Discussion Kit.
  *
  * GitHub's /login/oauth/access_token endpoint doesn't allow browser CORS,
  * so this tiny Worker performs the exchange server-side. It holds the OAuth

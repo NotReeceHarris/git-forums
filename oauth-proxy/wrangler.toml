@@ -1,4 +1,4 @@
-name = "git-forums-oauth"
+name = "discussion-kit-oauth"
 main = "worker.js"
 compatibility_date = "2025-01-01"
 

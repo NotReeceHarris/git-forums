@@ -130,7 +130,7 @@ export function defineForumConfig(config: UserForumConfig): UserForumConfig {
 
 export const defaultConfig: ForumConfig = {
 	site: {
-		name: 'Git Forums',
+		name: 'Discussion Kit',
 		description: 'A community forum powered by GitHub Discussions',
 		logo: '',
 		footer: ''
