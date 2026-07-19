@@ -1,1 +1,171 @@
 @import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Fumadocs-style neutral palette */
+:root {
+	--fd-background: hsl(0 0% 100%);
+	--fd-foreground: hsl(0 0% 3.9%);
+	--fd-muted: hsl(0 0% 96.1%);
+	--fd-muted-foreground: hsl(0 0% 45.1%);
+	--fd-card: hsl(0 0% 99.7%);
+	--fd-card-foreground: hsl(0 0% 3.9%);
+	--fd-border: hsl(0 0% 89.8%);
+	--fd-primary: hsl(0 0% 9%);
+	--fd-primary-foreground: hsl(0 0% 98%);
+	--fd-accent: hsl(0 0% 94.1%);
+	--fd-accent-foreground: hsl(0 0% 9%);
+	--fd-ring: hsl(0 0% 63.9%);
+	--fd-link: hsl(210 100% 42%);
+}
+
+.dark {
+	--fd-background: hsl(0 0% 5.5%);
+	--fd-foreground: hsl(0 0% 92%);
+	--fd-muted: hsl(0 0% 12.9%);
+	--fd-muted-foreground: hsl(0 0% 60.9%);
+	--fd-card: hsl(0 0% 8%);
+	--fd-card-foreground: hsl(0 0% 92%);
+	--fd-border: hsl(0 0% 15.5%);
+	--fd-primary: hsl(0 0% 98%);
+	--fd-primary-foreground: hsl(0 0% 9%);
+	--fd-accent: hsl(0 0% 14.9%);
+	--fd-accent-foreground: hsl(0 0% 98%);
+	--fd-ring: hsl(0 0% 40%);
+	--fd-link: hsl(210 100% 66%);
+}
+
+@theme inline {
+	--color-fd-background: var(--fd-background);
+	--color-fd-foreground: var(--fd-foreground);
+	--color-fd-muted: var(--fd-muted);
+	--color-fd-muted-foreground: var(--fd-muted-foreground);
+	--color-fd-card: var(--fd-card);
+	--color-fd-card-foreground: var(--fd-card-foreground);
+	--color-fd-border: var(--fd-border);
+	--color-fd-primary: var(--fd-primary);
+	--color-fd-primary-foreground: var(--fd-primary-foreground);
+	--color-fd-accent: var(--fd-accent);
+	--color-fd-accent-foreground: var(--fd-accent-foreground);
+	--color-fd-ring: var(--fd-ring);
+	--color-fd-link: var(--fd-link);
+
+	--font-sans:
+		'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+		Arial, sans-serif;
+}
+
+html {
+	@apply bg-fd-background text-fd-foreground antialiased;
+	scrollbar-gutter: stable;
+}
+
+body {
+	@apply font-sans text-[15px];
+}
+
+::selection {
+	@apply bg-fd-primary/90 text-fd-primary-foreground;
+}
+
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--fd-border) transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* GitHub-rendered markdown (bodyHTML) — fumadocs-flavoured prose      */
+/* ------------------------------------------------------------------ */
+
+.markdown {
+	@apply text-[15px] leading-7 text-fd-foreground/90;
+	overflow-wrap: anywhere;
+}
+
+.markdown > *:first-child {
+	margin-top: 0;
+}
+.markdown > *:last-child {
+	margin-bottom: 0;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote,
+.markdown pre,
+.markdown table {
+	@apply my-3;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+	@apply mt-6 mb-3 font-semibold tracking-tight text-fd-foreground;
+}
+.markdown h1 {
+	@apply border-b border-fd-border pb-2 text-2xl;
+}
+.markdown h2 {
+	@apply border-b border-fd-border pb-2 text-xl;
+}
+.markdown h3 {
+	@apply text-lg;
+}
+
+.markdown a {
+	@apply font-medium text-fd-link no-underline hover:underline;
+}
+
+.markdown ul {
+	@apply list-disc pl-6;
+}
+.markdown ol {
+	@apply list-decimal pl-6;
+}
+.markdown li + li {
+	@apply mt-1;
+}
+
+.markdown blockquote {
+	@apply border-l-2 border-fd-border pl-4 text-fd-muted-foreground;
+}
+
+.markdown code {
+	@apply rounded-md border border-fd-border bg-fd-muted px-1.5 py-0.5 font-mono text-[13px];
+}
+
+.markdown pre {
+	@apply overflow-x-auto rounded-xl border border-fd-border bg-fd-card p-4;
+}
+.markdown pre code {
+	@apply border-0 bg-transparent p-0 text-[13px] leading-6;
+}
+
+.markdown img {
+	@apply max-w-full rounded-lg border border-fd-border;
+}
+
+.markdown hr {
+	@apply my-6 border-fd-border;
+}
+
+.markdown table {
+	@apply block w-max max-w-full overflow-x-auto border-collapse text-sm;
+}
+.markdown th,
+.markdown td {
+	@apply border border-fd-border px-3 py-1.5;
+}
+.markdown th {
+	@apply bg-fd-muted font-semibold;
+}
+
+/* GitHub injects these wrappers/anchors into bodyHTML */
+.markdown .anchor {
+	@apply hidden;
+}
+.markdown g-emoji {
+	font-family: inherit;
+}
