@@ -1,4 +1,4 @@
-# git-forums
+# Discussion Kit
 
 [![Follow us on product hunt](https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1273493&theme=light&size=small)](https://www.producthunt.com/products/git-forum?utm_source=badge-follow&utm_medium=badge&utm_source=badge-git&#0045;forum)
 
@@ -87,7 +87,7 @@ npx wrangler deploy
 npx wrangler secret put GITHUB_CLIENT_SECRET   # paste the client secret when prompted
 ```
 
-The deploy output prints your Worker URL, e.g. `https://git-forums-oauth.<account>.workers.dev`.
+The deploy output prints your Worker URL, e.g. `https://discussion-kit-oauth.<account>.workers.dev`.
 
 **Option B — Cloudflare dashboard (no CLI):**
 
@@ -103,7 +103,7 @@ In [`forum.config.ts`](forum.config.ts):
 auth: {
 	oauth: {
 		clientId: '<your client id>',
-		proxyUrl: 'https://git-forums-oauth.<account>.workers.dev'
+		proxyUrl: 'https://discussion-kit-oauth.<account>.workers.dev'
 	}
 }
 ```

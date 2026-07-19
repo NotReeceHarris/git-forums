@@ -27,7 +27,7 @@ npx wrangler secret put GITHUB_CLIENT_SECRET   # paste the secret when prompted
 ```
 
 The deploy output prints your Worker URL, e.g.
-`https://git-forums-oauth.<account>.workers.dev`.
+`https://discussion-kit-oauth.<account>.workers.dev`.
 
 ### Option B — Cloudflare dashboard (no CLI)
 
@@ -46,7 +46,7 @@ In `forum.config.ts`:
 auth: {
 	oauth: {
 		clientId: '<your client id>',
-		proxyUrl: 'https://git-forums-oauth.<account>.workers.dev'
+		proxyUrl: 'https://discussion-kit-oauth.<account>.workers.dev'
 	}
 }
 ```

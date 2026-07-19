@@ -46,7 +46,7 @@ describe('mergeConfig', () => {
 
 	it('does not mutate the defaults', () => {
 		mergeConfig({ site: { name: 'Mutant' } });
-		expect(defaultConfig.site.name).toBe('Git Forums');
+		expect(defaultConfig.site.name).toBe('Discussion Kit');
 	});
 });
 
