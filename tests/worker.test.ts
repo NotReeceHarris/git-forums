@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-// @ts-expect-error plain-JS Cloudflare Worker module
 import worker, { parseAllowedOrigins } from '../oauth-proxy/worker.js';
 
 const env = {

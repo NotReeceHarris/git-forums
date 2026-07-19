@@ -15,7 +15,15 @@
  *   GITHUB_CLIENT_SECRET  OAuth app client secret                              (secret!)
  */
 
-/** Parse the ALLOWED_ORIGINS CSV into a clean list */
+/**
+ * @typedef {{ ALLOWED_ORIGINS?: string, GITHUB_CLIENT_ID: string, GITHUB_CLIENT_SECRET: string }} Env
+ */
+
+/**
+ * Parse the ALLOWED_ORIGINS CSV into a clean list.
+ * @param {string | undefined} csv
+ * @returns {string[]}
+ */
 export function parseAllowedOrigins(csv) {
 	return (csv ?? '')
 		.split(',')
@@ -24,6 +32,11 @@ export function parseAllowedOrigins(csv) {
 }
 
 export default {
+	/**
+	 * @param {Request} request
+	 * @param {Env} env
+	 * @returns {Promise<Response>}
+	 */
 	async fetch(request, env) {
 		const allowed = parseAllowedOrigins(env.ALLOWED_ORIGINS);
 		const origin = request.headers.get('Origin');
@@ -36,6 +49,10 @@ export default {
 			'Access-Control-Allow-Headers': 'Content-Type',
 			Vary: 'Origin'
 		};
+		/**
+		 * @param {unknown} body
+		 * @param {number} [status]
+		 */
 		const json = (body, status = 200) =>
 			new Response(JSON.stringify(body), {
 				status,
