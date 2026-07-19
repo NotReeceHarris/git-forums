@@ -39,7 +39,7 @@ describe('formatDate', () => {
 
 describe('excerpt', () => {
 	it('strips HTML comments (the article marker)', () => {
-		expect(excerpt('<!-- gf:article -->\n\nHello world')).toBe('Hello world');
+		expect(excerpt('<!-- dk:article -->\n\nHello world')).toBe('Hello world');
 	});
 
 	it('strips fenced code blocks', () => {

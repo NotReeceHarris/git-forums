@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockConfig, getCategories, getViewerPermission } = vi.hoisted(() => ({
+const { mockConfig, getOverview } = vi.hoisted(() => ({
 	mockConfig: {
 		admins: { logins: ['root'], badgeLabel: 'ADMIN' },
 		badges: {
@@ -11,12 +11,19 @@ const { mockConfig, getCategories, getViewerPermission } = vi.hoisted(() => ({
 			topics: { include: [] as string[], exclude: [] as string[], restricted: ['announcements'] }
 		}
 	},
-	getCategories: vi.fn(),
-	getViewerPermission: vi.fn()
+	getOverview: vi.fn()
 }));
 
 vi.mock('$lib/config', () => ({ forumConfig: mockConfig }));
-vi.mock('$lib/github/api', () => ({ getCategories, getViewerPermission }));
+vi.mock('$lib/github/api', () => ({ getOverview }));
+// pass-through swr: run the fetcher and apply the fresh result
+vi.mock('$lib/cache', () => ({
+	swr: async <T,>(
+		_key: string,
+		fetcher: () => Promise<T>,
+		apply: (data: T, meta: { fromCache: boolean }) => void
+	) => apply(await fetcher(), { fromCache: false })
+}));
 
 let mod: typeof import('$lib/ui.svelte');
 
@@ -24,24 +31,34 @@ const cats = [
 	{ id: '1', slug: 'general' },
 	{ id: '2', slug: 'announcements' }
 ];
+const feed = { totalCount: 1, pageInfo: { endCursor: null, hasNextPage: false }, nodes: [] };
 
 beforeEach(async () => {
 	vi.resetModules();
-	getCategories.mockReset().mockResolvedValue(cats);
-	getViewerPermission.mockReset().mockResolvedValue('READ');
+	getOverview.mockReset().mockResolvedValue({
+		categories: cats,
+		viewerPermission: 'READ',
+		discussions: feed
+	});
 	localStorage.clear();
 	document.documentElement.className = '';
 	mod = await import('$lib/ui.svelte');
 });
 
-describe('loadCategories', () => {
-	it('loads categories and the viewer permission once', async () => {
-		await mod.loadCategories();
+describe('loadOverview', () => {
+	it('populates categories, permission, and the home feed', async () => {
+		await mod.loadOverview();
 		expect(mod.ui.categories).toEqual(cats);
 		expect(mod.ui.viewerPermission).toBe('READ');
+		expect(mod.ui.home).toEqual(feed);
 		expect(mod.ui.categoriesLoaded).toBe(true);
-		await mod.loadCategories();
-		expect(getCategories).toHaveBeenCalledTimes(1);
+		expect(getOverview).toHaveBeenCalledWith({ fresh: false });
+	});
+
+	it('revalidates with a fresh fetch on later calls', async () => {
+		await mod.loadOverview();
+		await mod.loadOverview();
+		expect(getOverview).toHaveBeenLastCalledWith({ fresh: true });
 	});
 });
 
@@ -79,7 +96,7 @@ describe('permissions', () => {
 	});
 
 	it('postableCategories filters restricted topics for readers', async () => {
-		await mod.loadCategories();
+		await mod.loadOverview();
 		expect(mod.postableCategories().map((c) => c.slug)).toEqual(['general']);
 		mod.ui.viewerPermission = 'WRITE';
 		expect(mod.postableCategories().map((c) => c.slug)).toEqual(['general', 'announcements']);
@@ -90,9 +107,9 @@ describe('toggleTheme', () => {
 	it('toggles the dark class and persists the choice', () => {
 		mod.toggleTheme();
 		expect(document.documentElement.classList.contains('dark')).toBe(true);
-		expect(localStorage.getItem('gf:theme')).toBe('dark');
+		expect(localStorage.getItem('dk:theme')).toBe('dark');
 		mod.toggleTheme();
 		expect(document.documentElement.classList.contains('dark')).toBe(false);
-		expect(localStorage.getItem('gf:theme')).toBe('light');
+		expect(localStorage.getItem('dk:theme')).toBe('light');
 	});
 });

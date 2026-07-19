@@ -33,7 +33,8 @@ export interface DiscussionListItem {
 	id: string;
 	number: number;
 	title: string;
-	body: string;
+	/** Raw markdown; only fetched when excerpts or articles are enabled */
+	body?: string;
 	createdAt: string;
 	upvoteCount: number;
 	author: Actor | null;

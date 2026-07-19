@@ -4,6 +4,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -33,3 +37,64 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 14
+
+      - name: Comment coverage table on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'coverage/coverage-summary.json';
+            if (!fs.existsSync(path)) {
+              core.info('No coverage summary found — skipping PR comment.');
+              return;
+            }
+            const summary = JSON.parse(fs.readFileSync(path, 'utf8'));
+
+            const prefix = `${process.cwd()}/`;
+            const rows = Object.entries(summary)
+              .filter(([file]) => file !== 'total')
+              .map(([file, m]) => [
+                file.replace(prefix, ''),
+                `${m.statements.pct}`,
+                `${m.branches.pct}`,
+                `${m.functions.pct}`,
+                `${m.lines.pct}`
+              ])
+              .sort((a, b) => a[0].localeCompare(b[0]));
+            const t = summary.total;
+            rows.push(['TOTAL', `${t.statements.pct}`, `${t.branches.pct}`, `${t.functions.pct}`, `${t.lines.pct}`]);
+
+            const headers = ['File', 'Stmts %', 'Branch %', 'Funcs %', 'Lines %'];
+            const all = [headers, ...rows];
+            const widths = headers.map((_, i) => Math.max(...all.map((r) => r[i].length)));
+            const fmt = (r) =>
+              r.map((c, i) => (i === 0 ? c.padEnd(widths[i]) : c.padStart(widths[i]))).join('  ');
+            const sep = widths.map((w) => '-'.repeat(w)).join('  ');
+
+            const marker = '<!-- discussion-kit-coverage -->';
+            const body = [
+              marker,
+              '### 🧪 Test coverage',
+              '',
+              '```',
+              fmt(headers),
+              sep,
+              ...rows.map(fmt),
+              '```'
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

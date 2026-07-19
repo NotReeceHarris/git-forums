@@ -9,7 +9,7 @@ describe('resolved config', () => {
 		expect(forumConfig.repo.name).toBe('discussion-kit');
 		expect(forumConfig.site.name).toBe('Discussion Kit');
 		// default that forum.config.ts does not override
-		expect(forumConfig.content.articles.marker).toBe('<!-- gf:article -->');
+		expect(forumConfig.content.articles.marker).toBe('<!-- dk:article -->');
 	});
 
 	it('is not incomplete when a repo is configured', () => {

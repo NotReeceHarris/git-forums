@@ -82,6 +82,12 @@ export interface ForumConfig {
 		pageSize: number;
 		/** List ordering */
 		sort: 'CREATED_AT' | 'UPDATED_AT';
+		/**
+		 * Show a two-line body excerpt on list rows. Disabling this (together
+		 * with `articles.enabled`) lets list queries skip fetching post bodies
+		 * entirely, which drastically shrinks payloads on busy forums.
+		 */
+		listExcerpts: boolean;
 		articles: {
 			/** Enable the long-form "article" post type */
 			enabled: boolean;
@@ -107,6 +113,16 @@ export interface ForumConfig {
 		search: boolean;
 		reactions: boolean;
 		upvotes: boolean;
+	};
+	cache: {
+		/**
+		 * Stale-while-revalidate caching of GraphQL responses in localStorage:
+		 * pages render instantly from the last known data while a background
+		 * request revalidates and updates them.
+		 */
+		enabled: boolean;
+		/** Hard expiry — entries older than this are never served (seconds) */
+		ttlSeconds: number;
 	};
 	theme: {
 		light: ThemeOverrides;
@@ -152,9 +168,10 @@ export const defaultConfig: ForumConfig = {
 	content: {
 		pageSize: 25,
 		sort: 'CREATED_AT',
+		listExcerpts: true,
 		articles: {
 			enabled: true,
-			marker: '<!-- gf:article -->'
+			marker: '<!-- dk:article -->'
 		},
 		topics: { include: [], exclude: [], restricted: [] }
 	},
@@ -162,6 +179,10 @@ export const defaultConfig: ForumConfig = {
 		search: true,
 		reactions: true,
 		upvotes: true
+	},
+	cache: {
+		enabled: true,
+		ttlSeconds: 3600
 	},
 	theme: { light: {}, dark: {} }
 };

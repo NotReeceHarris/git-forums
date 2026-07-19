@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { swr, writeCache } from '$lib/cache';
 	import CommentCard from '$lib/components/CommentCard.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import MarkdownEditor from '$lib/components/MarkdownEditor.svelte';
@@ -10,7 +11,7 @@
 	import { forumConfig } from '$lib/config';
 	import { addComment, getDiscussion, isArticle, toggleUpvote } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
-	import type { Discussion } from '$lib/github/types';
+	import type { Comment, Discussion, Reply } from '$lib/github/types';
 	import { formatDate, timeAgo } from '$lib/utils';
 
 	let discussion = $state<Discussion | null>(null);
@@ -37,7 +38,10 @@
 		loading = true;
 		error = null;
 		try {
-			discussion = await getDiscussion(number);
+			await swr(`discussion:${number}`, () => getDiscussion(number), (fresh) => {
+				discussion = fresh;
+				loading = false;
+			});
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to load discussion.';
 		} finally {
@@ -45,13 +49,9 @@
 		}
 	}
 
-	/** Silent refetch after posting a comment/reply */
-	async function refresh() {
-		try {
-			discussion = await getDiscussion(number);
-		} catch {
-			// keep showing the stale thread
-		}
+	/** Persist the locally-updated thread so the cache stays fresh */
+	function persist() {
+		if (discussion) writeCache(`discussion:${number}`, $state.snapshot(discussion));
 	}
 
 	async function submitComment(e: SubmitEvent) {
@@ -60,14 +60,28 @@
 		posting = true;
 		postError = null;
 		try {
-			await addComment(discussion.id, commentBody);
+			// the mutation returns the created comment — insert it directly
+			// instead of refetching the whole thread
+			const created = await addComment(discussion.id, commentBody);
+			discussion.comments.nodes.push({
+				...created,
+				isAnswer: false,
+				replies: { totalCount: 0, nodes: [] }
+			});
+			discussion.comments.totalCount += 1;
 			commentBody = '';
-			await refresh();
+			persist();
 		} catch (err) {
 			postError = err instanceof Error ? err.message : 'Failed to post comment.';
 		} finally {
 			posting = false;
 		}
+	}
+
+	function onReplyPosted(comment: Comment, reply: Reply) {
+		comment.replies.nodes.push(reply);
+		comment.replies.totalCount += 1;
+		persist();
 	}
 
 	async function upvote() {
@@ -183,7 +197,7 @@
 						{comment}
 						discussionId={discussion.id}
 						locked={discussion.locked}
-						onposted={refresh}
+						onposted={(reply) => onReplyPosted(comment, reply)}
 					/>
 				{/each}
 			</div>

@@ -7,7 +7,7 @@ A fully featured forum site powered entirely by **GitHub Discussions** — no ba
 ## How it works
 
 - **Topics** are your repository's Discussion categories.
-- **Posts and articles** are discussions. Articles are marked with a hidden `<!-- gf:article -->` comment and get a long-form reading layout plus an "Articles" tab per topic.
+- **Posts and articles** are discussions. Articles are marked with a hidden `<!-- dk:article -->` comment and get a long-form reading layout plus an "Articles" tab per topic.
 - **Comments, threaded replies, reactions, and upvotes** map 1:1 to Discussions features via the GitHub GraphQL API.
 - **Search** uses GitHub's discussion search scoped to the repo.
 - **Admins** are declared in [`forum.config.ts`](forum.config.ts) (`admins.logins`) and get an `ADMIN` badge everywhere they post.
@@ -34,8 +34,9 @@ Everything lives in [`forum.config.ts`](forum.config.ts). Every option is option
 | `auth` | `allowToken` (PAT sign-in on/off), `oauth.clientId` + `oauth.proxyUrl` (enables "Continue with GitHub") |
 | `admins` | `logins` (GitHub usernames that get the admin badge), `badgeLabel` |
 | `badges` | Custom badges next to usernames, keyed by label: `{ 'Moderator': ['alice'], 'Contributor': ['bob', 'carol'] }` — users can hold several |
-| `content` | `pageSize`, `sort` (`CREATED_AT`/`UPDATED_AT`), `articles.enabled` + `articles.marker`, `topics.include`/`topics.exclude` (category slugs), `topics.restricted` (announcement-format slugs where only maintainers can post — the UI hides posting there unless the signed-in user has write access) |
+| `content` | `pageSize`, `sort` (`CREATED_AT`/`UPDATED_AT`), `listExcerpts` (disable together with articles to skip fetching post bodies in lists), `articles.enabled` + `articles.marker`, `topics.include`/`topics.exclude` (category slugs), `topics.restricted` (announcement-format slugs where only maintainers can post — the UI hides posting there unless the signed-in user has write access) |
 | `features` | `search`, `reactions`, `upvotes` — toggle whole features off |
+| `cache` | `enabled` (default `true`), `ttlSeconds` (default `3600`) — stale-while-revalidate caching of GraphQL responses in `localStorage`: pages paint instantly from the last known data while a background request refreshes them; entries are versioned, scoped per signed-in user, invalidated on posting, and wiped on sign-out |
 | `theme` | Per-scheme CSS token overrides (`light`/`dark`): `background`, `foreground`, `muted`, `mutedForeground`, `card`, `cardForeground`, `border`, `primary`, `primaryForeground`, `accent`, `accentForeground`, `ring`, `link` |
 
 Example — blue accent and a docs link:

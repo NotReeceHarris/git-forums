@@ -96,9 +96,9 @@
 			{/if}
 
 			<div>
-				<label class="mb-1 block text-sm font-medium" for="gf-topic">Topic</label>
+				<label class="mb-1 block text-sm font-medium" for="dk-topic">Topic</label>
 				<select
-					id="gf-topic"
+					id="dk-topic"
 					bind:value={categoryId}
 					class="w-full rounded-lg border border-fd-border bg-fd-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-fd-ring sm:max-w-xs"
 				>
@@ -109,9 +109,9 @@
 			</div>
 
 			<div>
-				<label class="mb-1 block text-sm font-medium" for="gf-title">Title</label>
+				<label class="mb-1 block text-sm font-medium" for="dk-title">Title</label>
 				<input
-					id="gf-title"
+					id="dk-title"
 					type="text"
 					bind:value={title}
 					maxlength="256"

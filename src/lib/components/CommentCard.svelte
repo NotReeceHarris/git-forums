@@ -2,7 +2,7 @@
 	import { forumConfig } from '$lib/config';
 	import { addComment } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
-	import type { Comment } from '$lib/github/types';
+	import type { Comment, Reply } from '$lib/github/types';
 	import { ui } from '$lib/ui.svelte';
 	import { timeAgo } from '$lib/utils';
 	import MarkdownEditor from './MarkdownEditor.svelte';
@@ -18,7 +18,8 @@
 		comment: Comment;
 		discussionId: string;
 		locked?: boolean;
-		onposted: () => void;
+		/** Called with the created reply — the parent inserts it into the thread */
+		onposted: (reply: Reply) => void;
 	} = $props();
 
 	let replying = $state(false);
@@ -40,10 +41,10 @@
 		busy = true;
 		error = null;
 		try {
-			await addComment(discussionId, replyBody, comment.id);
+			const reply = await addComment(discussionId, replyBody, comment.id);
 			replyBody = '';
 			replying = false;
-			onposted();
+			onposted(reply);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to post reply.';
 		} finally {
