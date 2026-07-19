@@ -35,9 +35,19 @@ const feed = {
 	nodes: [{ id: 'd1' }]
 };
 
-// the combined bootstrap query: categories + permission + home feed
-const categoriesData = (nodes: unknown[], viewerPermission: string | null = 'READ') => ({
-	repository: { id: 'RID', viewerPermission, discussionCategories: { nodes }, discussions: feed }
+// the combined bootstrap query: categories + permission + home feed + pins
+const categoriesData = (
+	nodes: unknown[],
+	viewerPermission: string | null = 'READ',
+	pinned: unknown[] = []
+) => ({
+	repository: {
+		id: 'RID',
+		viewerPermission,
+		discussionCategories: { nodes },
+		discussions: feed,
+		pinnedDiscussions: { nodes: pinned.map((discussion) => ({ discussion })) }
+	}
 });
 
 const cat = (slug: string) => ({
@@ -148,10 +158,22 @@ describe('getOverview', () => {
 		const overview = await api.getOverview();
 		expect(overview.discussions).toEqual(feed);
 		expect(overview.viewerPermission).toBe('WRITE');
+		expect(overview.pinned).toEqual([]);
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
 		expect(body.query).toContain('discussionCategories');
 		expect(body.query).toContain('discussions(first: $first');
+		expect(body.query).toContain('pinnedDiscussions');
+	});
+
+	it('returns pins but hides those in excluded topics', async () => {
+		mockConfig.content.topics.exclude = ['hidden'];
+		const pin = (slug: string, id: string) => ({ id, category: { slug } });
+		fetchMock.mockResolvedValue(
+			gqlOk(categoriesData([cat('a')], 'READ', [pin('a', 'p1'), pin('hidden', 'p2')]))
+		);
+		const overview = await api.getOverview();
+		expect(overview.pinned.map((p) => p.id)).toEqual(['p1']);
 	});
 
 	it('deduplicates concurrent callers but honours fresh', async () => {
@@ -291,6 +313,39 @@ describe('addComment', () => {
 		await api.addComment('DID', 'hello', 'PARENT');
 		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
 		expect(body.variables.input).toEqual({ discussionId: 'DID', body: 'hello', replyToId: 'PARENT' });
+	});
+});
+
+describe('updateDiscussion', () => {
+	it('sends the changed fields and returns the updated discussion', async () => {
+		const updated = { title: 'New', body: 'B2', bodyHTML: '<p>B2</p>', category: cat('a') };
+		fetchMock.mockResolvedValue(gqlOk({ updateDiscussion: { discussion: updated } }));
+		const result = await api.updateDiscussion('DID', {
+			title: 'New',
+			body: 'B2',
+			categoryId: 'CID'
+		});
+		expect(result).toEqual(updated);
+		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+		expect(body.query).toContain('updateDiscussion');
+		expect(body.variables.input).toEqual({
+			discussionId: 'DID',
+			title: 'New',
+			body: 'B2',
+			categoryId: 'CID'
+		});
+		expect(invalidateCache).toHaveBeenCalledWith('discussion');
+	});
+});
+
+describe('deleteDiscussion', () => {
+	it('deletes by node id and invalidates caches', async () => {
+		fetchMock.mockResolvedValue(gqlOk({ deleteDiscussion: { clientMutationId: null } }));
+		await api.deleteDiscussion('DID');
+		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+		expect(body.query).toContain('deleteDiscussion');
+		expect(body.variables.input).toEqual({ id: 'DID' });
+		expect(invalidateCache).toHaveBeenCalledWith('discussion');
 	});
 });
 

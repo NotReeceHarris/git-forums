@@ -4,6 +4,7 @@
 	import { swr } from '$lib/cache';
 	import DiscussionRow from '$lib/components/DiscussionRow.svelte';
 	import Loading from '$lib/components/Loading.svelte';
+	import PinnedList from '$lib/components/PinnedList.svelte';
 	import SignInPrompt from '$lib/components/SignInPrompt.svelte';
 	import { forumConfig } from '$lib/config';
 	import { isArticle, listDiscussions } from '$lib/github/api';
@@ -20,10 +21,16 @@
 	let error = $state<string | null>(null);
 	let filter = $state<'all' | 'posts' | 'articles'>('all');
 
+	// pins for this topic render in their own section above the tabs
+	const pinned = $derived(ui.pinned.filter((p) => p.category.slug === page.params.slug));
+	const pinnedIds = $derived(new Set(pinned.map((p) => p.id)));
+
 	const filtered = $derived(
-		discussions.filter((d) =>
-			filter === 'all' ? true : filter === 'articles' ? isArticle(d.body) : !isArticle(d.body)
-		)
+		discussions
+			.filter((d) => !pinnedIds.has(d.id))
+			.filter((d) =>
+				filter === 'all' ? true : filter === 'articles' ? isArticle(d.body) : !isArticle(d.body)
+			)
 	);
 
 	let loadedFor: string | null = null;
@@ -117,6 +124,8 @@
 			</span>
 		{/if}
 	</div>
+
+	<PinnedList discussions={pinned} showCategory={false} />
 
 	{#if forumConfig.content.articles.enabled}
 	<div class="mb-4 flex gap-1 rounded-lg border border-fd-border bg-fd-muted/50 p-1 text-sm w-fit">
