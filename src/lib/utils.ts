@@ -7,13 +7,12 @@ export function timeAgo(iso: string): string {
 		[60 * 60 * 24 * 30, 'mo'],
 		[60 * 60 * 24 * 7, 'w'],
 		[60 * 60 * 24, 'd'],
-		[60 * 60, 'h'],
-		[60, 'm']
+		[60 * 60, 'h']
 	];
 	for (const [size, label] of units) {
 		if (seconds >= size) return `${Math.floor(seconds / size)}${label} ago`;
 	}
-	return 'just now';
+	return `${Math.floor(seconds / 60)}m ago`;
 }
 
 export function formatDate(iso: string): string {

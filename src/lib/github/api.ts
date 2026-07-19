@@ -5,6 +5,7 @@ import type {
 	Discussion,
 	DiscussionPage,
 	ReactionContent,
+	RepositoryPermission,
 	SearchResult,
 	Viewer
 } from './types';
@@ -69,15 +70,21 @@ export function stripMarker(body: string): string {
 
 let repoId: string | null = null;
 let categoriesCache: Category[] | null = null;
+let viewerPermissionCache: RepositoryPermission | null = null;
 
 export async function getCategories(): Promise<Category[]> {
 	if (categoriesCache) return categoriesCache;
 	const data = await gql<{
-		repository: { id: string; discussionCategories: { nodes: Category[] } };
+		repository: {
+			id: string;
+			viewerPermission: RepositoryPermission | null;
+			discussionCategories: { nodes: Category[] };
+		};
 	}>(
 		`query ($owner: String!, $repo: String!) {
 			repository(owner: $owner, name: $repo) {
 				id
+				viewerPermission
 				discussionCategories(first: 25) {
 					nodes { id name slug emojiHTML description isAnswerable }
 				}
@@ -86,11 +93,19 @@ export async function getCategories(): Promise<Category[]> {
 		{ owner: forumConfig.repo.owner, repo: forumConfig.repo.name }
 	);
 	repoId = data.repository.id;
+	viewerPermissionCache = data.repository.viewerPermission ?? 'READ';
 	const { include, exclude } = forumConfig.content.topics;
 	categoriesCache = data.repository.discussionCategories.nodes.filter(
 		(c) => (include.length === 0 || include.includes(c.slug)) && !exclude.includes(c.slug)
 	);
 	return categoriesCache;
+}
+
+/** The signed-in user's permission on the forum repository (READ for outsiders). */
+export async function getViewerPermission(): Promise<RepositoryPermission> {
+	if (!viewerPermissionCache) await getCategories();
+	// getCategories always fills the cache (falling back to READ)
+	return viewerPermissionCache!;
 }
 
 async function getRepoId(): Promise<string> {
@@ -250,31 +265,6 @@ export async function renderMarkdown(text: string): Promise<string> {
 	});
 	if (!res.ok) throw new GitHubError('Markdown preview failed.', res.status);
 	return res.text();
-}
-
-/* ------ */
-/* Admins */
-/* ------ */
-
-let adminsCache: string[] | null = null;
-
-export async function getAdmins(): Promise<string[]> {
-	if (adminsCache) return adminsCache;
-	const inline = forumConfig.admins.logins;
-	const { source } = forumConfig.admins;
-	if (!source) return (adminsCache = [...inline]);
-	try {
-		const res = await fetch(
-			`https://raw.githubusercontent.com/${forumConfig.repo.owner}/${forumConfig.repo.name}/${forumConfig.repo.branch}/${source}`
-		);
-		if (!res.ok) return (adminsCache = [...inline]);
-		const data = (await res.json()) as { admins?: string[] };
-		const fetched = Array.isArray(data.admins) ? data.admins : [];
-		adminsCache = [...new Set([...fetched, ...inline])];
-	} catch {
-		adminsCache = [...inline];
-	}
-	return adminsCache;
 }
 
 export type { Viewer };

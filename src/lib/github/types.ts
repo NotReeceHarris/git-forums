@@ -82,6 +82,8 @@ export interface Discussion {
 	comments: { totalCount: number; pageInfo: PageInfo; nodes: Comment[] };
 }
 
+export type RepositoryPermission = 'ADMIN' | 'MAINTAIN' | 'WRITE' | 'TRIAGE' | 'READ';
+
 export interface Viewer {
 	login: string;
 	name: string | null;

@@ -2,7 +2,7 @@ import { defineForumConfig } from './src/lib/config/schema';
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- *  Git Forums configuration
+ *  git-forums configuration
  * ─────────────────────────────────────────────────────────────────────────────
  *  Every option is optional — anything you omit falls back to a sensible
  *  default (see src/lib/config/schema.ts for the full schema and defaults).
@@ -13,7 +13,7 @@ import { defineForumConfig } from './src/lib/config/schema';
  *    3. Either set `repo.owner` / `repo.name`, or delete them — when built by
  *       the included GitHub Actions workflow they are auto-detected, so a fork
  *       can deploy without touching any code.
- *    4. Optionally list admins in meta/admins.json (or inline below).
+ *    4. Optionally list admin logins below.
  */
 export default defineForumConfig({
 	site: {
@@ -26,8 +26,7 @@ export default defineForumConfig({
 	repo: {
 		// Omit owner/name to auto-detect when building in GitHub Actions.
 		owner: 'NotReeceHarris',
-		name: 'git-forums',
-		branch: 'main'
+		name: 'git-forums'
 	},
 
 	// Extra header links
@@ -45,9 +44,14 @@ export default defineForumConfig({
 	},
 
 	admins: {
-		source: 'meta/admins.json', // fetched from the repo at runtime; '' disables
-		logins: [],                 // extra inline admins
-		badgeLabel: 'ADMIN'
+		logins: ['NotReeceHarris'], // GitHub logins that get the admin badge
+		badgeLabel: 'Admin'  // label shown next to admin usernames
+	},
+
+	// Custom badges shown next to usernames: label → GitHub logins
+	badges: {
+		'Moderator': ['NotDevenBriers'],
+		// 'Contributor': ['someuser', 'anotheruser']
 	},
 
 	content: {
@@ -56,7 +60,8 @@ export default defineForumConfig({
 		articles: { enabled: true },
 		topics: {
 			include: [],              // only these category slugs (empty = all)
-			exclude: []               // hide these category slugs
+			exclude: [],              // hide these category slugs
+			restricted: ['announcements'] // announcement-format slugs: only maintainers can post
 		}
 	},
 

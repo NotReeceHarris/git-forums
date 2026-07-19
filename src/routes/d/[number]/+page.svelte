@@ -6,11 +6,11 @@
 	import MarkdownEditor from '$lib/components/MarkdownEditor.svelte';
 	import ReactionBar from '$lib/components/ReactionBar.svelte';
 	import SignInPrompt from '$lib/components/SignInPrompt.svelte';
+	import UserBadges from '$lib/components/UserBadges.svelte';
 	import { forumConfig } from '$lib/config';
 	import { addComment, getDiscussion, isArticle, toggleUpvote } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { Discussion } from '$lib/github/types';
-	import { isAdmin } from '$lib/ui.svelte';
 	import { formatDate, timeAgo } from '$lib/utils';
 
 	let discussion = $state<Discussion | null>(null);
@@ -137,9 +137,7 @@
 					>
 						{discussion.author.login}
 					</a>
-					{#if isAdmin(discussion.author.login)}
-						<span class="rounded bg-fd-primary px-1 py-px text-[10px] font-semibold text-fd-primary-foreground">{forumConfig.admins.badgeLabel}</span>
-					{/if}
+					<UserBadges login={discussion.author.login} />
 				</span>
 			{/if}
 			<span title={formatDate(discussion.createdAt)}>{timeAgo(discussion.createdAt)}</span>

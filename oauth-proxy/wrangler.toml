@@ -3,8 +3,9 @@ main = "worker.js"
 compatibility_date = "2025-01-01"
 
 [vars]
-# The origin your forum is served from (no path, no trailing slash)
-ALLOWED_ORIGIN = "https://notreeceharris.github.io"
+# Comma-separated list of origins allowed to use this proxy (no paths, no
+# trailing slashes)
+ALLOWED_ORIGINS = "https://notreeceharris.github.io,http://localhost:5173"
 # Your GitHub OAuth app's client id (not secret — the secret is set via
 # `wrangler secret put GITHUB_CLIENT_SECRET`)
 GITHUB_CLIENT_ID = "Ov23li1QctsLGHqbcIwq"

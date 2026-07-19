@@ -49,8 +49,6 @@ export interface ForumConfig {
 		 */
 		owner: string;
 		name: string;
-		/** Branch that admins.json is fetched from */
-		branch: string;
 	};
 	/** Extra links shown in the header next to the logo */
 	nav: NavLink[];
@@ -68,16 +66,17 @@ export interface ForumConfig {
 		};
 	};
 	admins: {
-		/**
-		 * Path (in the repo, on `repo.branch`) of a JSON file listing admins:
-		 * { "admins": ["login", ...] }. Set to '' to disable fetching.
-		 */
-		source: string;
-		/** Additional admin logins declared inline */
+		/** GitHub logins of forum admins — they get a badge next to their name */
 		logins: string[];
 		/** Badge text shown next to admin usernames */
 		badgeLabel: string;
 	};
+	/**
+	 * Custom badges shown next to usernames, keyed by badge label:
+	 *   badges: { 'Moderator': ['alice'], 'Contributor': ['bob', 'carol'] }
+	 * A user can hold any number of badges (in addition to the admin badge).
+	 */
+	badges: Record<string, string[]>;
 	content: {
 		/** Discussions fetched per page */
 		pageSize: number;
@@ -94,6 +93,14 @@ export interface ForumConfig {
 			include: string[];
 			/** Hide these category slugs */
 			exclude: string[];
+			/**
+			 * Category slugs that only repository maintainers can post in
+			 * (GitHub's "announcement" format categories). The API doesn't expose
+			 * a category's format, so list them here; the forum then checks the
+			 * viewer's repository permission (write/maintain/admin) before showing
+			 * posting UI for them. GitHub enforces this server-side regardless.
+			 */
+			restricted: string[];
 		};
 	};
 	features: {
@@ -130,8 +137,7 @@ export const defaultConfig: ForumConfig = {
 	},
 	repo: {
 		owner: '',
-		name: '',
-		branch: 'main'
+		name: ''
 	},
 	nav: [],
 	auth: {
@@ -139,10 +145,10 @@ export const defaultConfig: ForumConfig = {
 		oauth: { clientId: '', proxyUrl: '' }
 	},
 	admins: {
-		source: 'meta/admins.json',
 		logins: [],
 		badgeLabel: 'ADMIN'
 	},
+	badges: {},
 	content: {
 		pageSize: 25,
 		sort: 'CREATED_AT',
@@ -150,7 +156,7 @@ export const defaultConfig: ForumConfig = {
 			enabled: true,
 			marker: '<!-- gf:article -->'
 		},
-		topics: { include: [], exclude: [] }
+		topics: { include: [], exclude: [], restricted: [] }
 	},
 	features: {
 		search: true,
@@ -161,12 +167,12 @@ export const defaultConfig: ForumConfig = {
 };
 
 export function mergeConfig(user: UserForumConfig): ForumConfig {
-	const merge = <T extends Record<string, unknown>>(base: T, over?: Record<string, unknown>): T => {
-		if (!over) return base;
-		const out = { ...base } as Record<string, unknown>;
+	// deep-clone so the resolved config never shares (or mutates) the defaults
+	const result = structuredClone(defaultConfig) as unknown as Record<string, unknown>;
+	const apply = (target: Record<string, unknown>, over: Record<string, unknown>) => {
 		for (const [key, value] of Object.entries(over)) {
 			if (value === undefined) continue;
-			const current = out[key];
+			const current = target[key];
 			if (
 				value !== null &&
 				typeof value === 'object' &&
@@ -175,14 +181,27 @@ export function mergeConfig(user: UserForumConfig): ForumConfig {
 				typeof current === 'object' &&
 				!Array.isArray(current)
 			) {
-				out[key] = merge(current as Record<string, unknown>, value as Record<string, unknown>);
+				apply(current as Record<string, unknown>, value as Record<string, unknown>);
 			} else {
-				out[key] = value;
+				target[key] = structuredClone(value);
 			}
 		}
-		return out as T;
 	};
-	return merge(defaultConfig as unknown as Record<string, unknown>, user) as unknown as ForumConfig;
+	apply(result, user);
+	return result as unknown as ForumConfig;
+}
+
+/**
+ * Fill in repo.owner/name from a "owner/name" string (the GITHUB_REPOSITORY
+ * value injected at build time) when the config leaves them empty.
+ */
+export function applyRepoFallback(config: ForumConfig, repository: string): void {
+	if (config.repo.owner && config.repo.name) return;
+	const [owner, name] = repository.split('/');
+	if (owner && name) {
+		config.repo.owner ||= owner;
+		config.repo.name ||= name;
+	}
 }
 
 const TOKEN_TO_VAR: Record<ThemeToken, string> = {

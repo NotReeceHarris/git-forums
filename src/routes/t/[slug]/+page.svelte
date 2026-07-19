@@ -8,7 +8,7 @@
 	import { isArticle, listDiscussions } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { DiscussionListItem, PageInfo } from '$lib/github/types';
-	import { ui } from '$lib/ui.svelte';
+	import { canPostIn, ui } from '$lib/ui.svelte';
 
 	const category = $derived(ui.categories.find((c) => c.slug === page.params.slug));
 
@@ -96,13 +96,23 @@
 				<p class="mt-1 text-sm text-fd-muted-foreground">{category.description}</p>
 			{/if}
 		</div>
-		<a
-			href="{resolve('/new')}?topic={category.slug}"
-			class="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-3 py-1.5 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
-		>
-			<svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
-			New post
-		</a>
+		{#if canPostIn(category)}
+			<a
+				href="{resolve('/new')}?topic={category.slug}"
+				class="inline-flex items-center gap-1.5 rounded-lg bg-fd-primary px-3 py-1.5 text-sm font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
+			>
+				<svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+				New post
+			</a>
+		{:else}
+			<span
+				class="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-3 py-1.5 text-sm text-fd-muted-foreground"
+				title="Only repository maintainers can post in this topic"
+			>
+				<svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+				Maintainers only
+			</span>
+		{/if}
 	</div>
 
 	{#if forumConfig.content.articles.enabled}

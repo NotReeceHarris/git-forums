@@ -10,7 +10,7 @@ A fully featured forum site powered entirely by **GitHub Discussions** — no ba
 - **Posts and articles** are discussions. Articles are marked with a hidden `<!-- gf:article -->` comment and get a long-form reading layout plus an "Articles" tab per topic.
 - **Comments, threaded replies, reactions, and upvotes** map 1:1 to Discussions features via the GitHub GraphQL API.
 - **Search** uses GitHub's discussion search scoped to the repo.
-- **Admins** are declared in [`meta/admins.json`](meta/admins.json) (fetched from `raw.githubusercontent.com` at runtime) and get an `ADMIN` badge everywhere they post.
+- **Admins** are declared in [`forum.config.ts`](forum.config.ts) (`admins.logins`) and get an `ADMIN` badge everywhere they post.
 - Post bodies are rendered by GitHub itself (`bodyHTML`), so you get GitHub-flavoured markdown, syntax highlighting markup, and sanitisation for free.
 
 > **Why is sign-in required to read?** GitHub Discussions is only exposed through the GraphQL API, which always requires authentication. There is no server here to hold a shared token, so each visitor authenticates with their own GitHub account.
@@ -20,7 +20,7 @@ A fully featured forum site powered entirely by **GitHub Discussions** — no ba
 1. **Fork / use this repo as a template.**
 2. **Enable Discussions** on your repository (Settings → General → Features → Discussions) and create the categories you want as forum topics.
 3. **Enable GitHub Pages** (Settings → Pages → Source: *GitHub Actions*) and push to `main` — [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds and deploys automatically. The repository is **auto-detected** from the Actions environment, so this works with zero code changes.
-4. Optionally customise [`forum.config.ts`](forum.config.ts) (project root) and [`meta/admins.json`](meta/admins.json).
+4. Optionally customise [`forum.config.ts`](forum.config.ts) (project root) — branding, admins, features, theme.
 
 ## Configuration
 
@@ -32,8 +32,9 @@ Everything lives in [`forum.config.ts`](forum.config.ts). Every option is option
 | `repo` | `owner`, `name` (omit both to auto-detect in GitHub Actions), `branch` |
 | `nav` | Extra header links: `{ label, href, external? }[]` |
 | `auth` | `allowToken` (PAT sign-in on/off), `oauth.clientId` + `oauth.proxyUrl` (enables "Continue with GitHub") |
-| `admins` | `source` (JSON path in the repo, default `meta/admins.json`, `''` disables), `logins` (inline admins), `badgeLabel` |
-| `content` | `pageSize`, `sort` (`CREATED_AT`/`UPDATED_AT`), `articles.enabled` + `articles.marker`, `topics.include`/`topics.exclude` (category slugs) |
+| `admins` | `logins` (GitHub usernames that get the admin badge), `badgeLabel` |
+| `badges` | Custom badges next to usernames, keyed by label: `{ 'Moderator': ['alice'], 'Contributor': ['bob', 'carol'] }` — users can hold several |
+| `content` | `pageSize`, `sort` (`CREATED_AT`/`UPDATED_AT`), `articles.enabled` + `articles.marker`, `topics.include`/`topics.exclude` (category slugs), `topics.restricted` (announcement-format slugs where only maintainers can post — the UI hides posting there unless the signed-in user has write access) |
 | `features` | `search`, `reactions`, `upvotes` — toggle whole features off |
 | `theme` | Per-scheme CSS token overrides (`light`/`dark`): `background`, `foreground`, `muted`, `mutedForeground`, `card`, `cardForeground`, `border`, `primary`, `primaryForeground`, `accent`, `accentForeground`, `ring`, `link` |
 
@@ -54,19 +55,80 @@ If no repository is configured or detectable, the site renders a friendly setup 
 
 ## Signing in
 
-Two modes, controlled by `forumConfig.oauth`:
+Two modes, controlled by `forumConfig.auth`:
 
 - **Personal access token (default, zero infrastructure).** Users create a [fine-grained PAT](https://github.com/settings/personal-access-tokens/new) with read/write **Discussions** permission on the forum repo and paste it into the sign-in dialog. It is stored in `localStorage` only.
-- **"Sign in with GitHub" OAuth.** GitHub's token-exchange endpoint blocks browser CORS, so you need a tiny proxy. A ready-to-deploy Cloudflare Worker is included in [`oauth-proxy/`](oauth-proxy/) — see its [README](oauth-proxy/README.md) for the 3-step setup (create OAuth app → deploy Worker → set `oauth.clientId` + `oauth.proxyUrl` in `forum.config.ts`).
+- **"Sign in with GitHub" OAuth.** A proper one-click sign-in via a tiny Cloudflare Worker proxy (setup below). Once OAuth is configured, token sign-in is automatically disabled — users only ever see the **Continue with GitHub** button.
+
+## Setting up the OAuth proxy
+
+GitHub's token-exchange endpoint (`github.com/login/oauth/access_token`) blocks browser CORS requests, so a static site can't complete the OAuth flow alone. The [`oauth-proxy/`](oauth-proxy/) folder contains a ready-to-deploy Cloudflare Worker (~50 lines, free tier is plenty) that holds your OAuth app's client secret and does exactly one thing: `POST { code }` → `{ access_token }`.
+
+### 1. Create a GitHub OAuth app
+
+Go to [github.com/settings/developers](https://github.com/settings/developers) → **New OAuth App**:
+
+- **Homepage URL**: `https://<user>.github.io/<repo>`
+- **Authorization callback URL**: `https://<user>.github.io/<repo>/auth/callback`
+
+Save the **Client ID**, then generate and copy a **Client Secret** (shown only once).
+
+### 2. Deploy the Worker
+
+**Option A — wrangler CLI:**
+
+```sh
+cd oauth-proxy
+# edit wrangler.toml first:
+#   ALLOWED_ORIGINS  = "https://<user>.github.io,http://localhost:5173"   (CSV of allowed origins)
+#   GITHUB_CLIENT_ID = "<your client id>"
+npx wrangler login
+npx wrangler deploy
+npx wrangler secret put GITHUB_CLIENT_SECRET   # paste the client secret when prompted
+```
+
+The deploy output prints your Worker URL, e.g. `https://git-forums-oauth.<account>.workers.dev`.
+
+**Option B — Cloudflare dashboard (no CLI):**
+
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → *Workers & Pages* → *Create Worker*, deploy the hello-world, then *Edit code* and paste in [`oauth-proxy/worker.js`](oauth-proxy/worker.js).
+2. Under *Settings → Variables and Secrets* add `ALLOWED_ORIGINS` (text, comma-separated origins), `GITHUB_CLIENT_ID` (text), and `GITHUB_CLIENT_SECRET` (**secret**, not plain text).
+3. Deploy and note the `*.workers.dev` URL.
+
+### 3. Point the forum at it
+
+In [`forum.config.ts`](forum.config.ts):
+
+```ts
+auth: {
+	oauth: {
+		clientId: '<your client id>',
+		proxyUrl: 'https://git-forums-oauth.<account>.workers.dev'
+	}
+}
+```
+
+Push, let Pages redeploy, and the sign-in dialog now shows **Continue with GitHub**.
+
+### Notes
+
+- The Worker rejects any request whose `Origin` header isn't in `ALLOWED_ORIGINS`, so other sites can't ride on your proxy; the forum additionally validates an OAuth `state` nonce client-side.
+- The client secret never reaches the browser — it lives only in the Worker.
+- Tokens are requested with the `public_repo` scope, which covers reading and posting to Discussions on public repositories.
+- For local dev, just include `http://localhost:5173` in `ALLOWED_ORIGINS` — one Worker can serve production and local development.
 
 ## Development
 
 ```sh
 npm install
-npm run dev        # dev server
-npm run check      # type-check
-npm run build      # static build (set BASE_PATH=/<repo> for GitHub Pages)
-npm run preview    # preview the production build
+npm run dev            # dev server
+npm run check          # type-check
+npm run test           # unit tests (vitest)
+npm run test:coverage  # unit tests + coverage (100% enforced on logic modules)
+npm run build          # static build (set BASE_PATH=/<repo> for GitHub Pages)
+npm run preview        # preview the production build
 ```
+
+Unit tests live in [`tests/`](tests/) and cover all logic modules (config merging/theming, the GitHub API layer, auth, permissions/badges, utilities) at 100% statement/branch/function/line coverage, enforced by thresholds in [`vitest.config.ts`](vitest.config.ts). CI runs them on every pull request ([`test.yml`](.github/workflows/test.yml)) and as a gate before every Pages deploy ([`deploy.yml`](.github/workflows/deploy.yml)).
 
 The app is a static SPA: `adapter-static` with a `404.html` fallback (GitHub Pages serves it for dynamic routes like `/d/42`, which the client router then handles), a `.nojekyll` file so `_app/` isn't ignored, and prerendered shells for the static routes.

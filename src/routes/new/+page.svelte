@@ -8,7 +8,7 @@
 	import { forumConfig } from '$lib/config';
 	import { createDiscussion } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
-	import { ui } from '$lib/ui.svelte';
+	import { postableCategories, ui } from '$lib/ui.svelte';
 
 	let title = $state('');
 	let body = $state('');
@@ -17,18 +17,24 @@
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 
+	// categories the signed-in user may actually post in (announcement-format
+	// topics are maintainer-only)
+	const postable = $derived(postableCategories());
+
 	// preselect ?topic=<slug> once categories arrive
 	$effect(() => {
-		if (!categoryId && ui.categories.length > 0) {
+		if (!categoryId && postable.length > 0) {
 			const slug = page.url.searchParams.get('topic');
-			const match = slug ? ui.categories.find((c) => c.slug === slug) : undefined;
-			categoryId = (match ?? ui.categories[0]).id;
+			const match = slug ? postable.find((c) => c.slug === slug) : undefined;
+			categoryId = (match ?? postable[0]).id;
 		}
 	});
 
 	async function submit(e: SubmitEvent) {
 		e.preventDefault();
 		if (!title.trim() || !body.trim() || !categoryId) return;
+		// belt-and-braces: never submit into a category the user can't post in
+		if (!postable.some((c) => c.id === categoryId)) return;
 		busy = true;
 		error = null;
 		try {
@@ -56,6 +62,13 @@
 	<SignInPrompt />
 {:else if !ui.categoriesLoaded}
 	<Loading />
+{:else if postable.length === 0}
+	<div class="rounded-2xl border border-dashed border-fd-border py-16 text-center">
+		<p class="font-medium">No topics available</p>
+		<p class="mt-1 text-sm text-fd-muted-foreground">
+			You don't have permission to post in any topic on this forum.
+		</p>
+	</div>
 {:else}
 	<div class="mx-auto max-w-3xl">
 		<h1 class="mb-6 text-2xl font-bold tracking-tight">Create a new {kind}</h1>
@@ -89,7 +102,7 @@
 					bind:value={categoryId}
 					class="w-full rounded-lg border border-fd-border bg-fd-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-fd-ring sm:max-w-xs"
 				>
-					{#each ui.categories as category (category.id)}
+					{#each postable as category (category.id)}
 						<option value={category.id}>{category.name}</option>
 					{/each}
 				</select>

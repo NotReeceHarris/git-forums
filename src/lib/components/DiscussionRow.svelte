@@ -4,7 +4,7 @@
 	import { isArticle } from '$lib/github/api';
 	import type { DiscussionListItem } from '$lib/github/types';
 	import { excerpt, timeAgo } from '$lib/utils';
-	import { isAdmin } from '$lib/ui.svelte';
+	import UserBadges from './UserBadges.svelte';
 
 	let {
 		discussion,
@@ -49,9 +49,7 @@
 			{#if discussion.author}
 				<span class="inline-flex items-center gap-1 font-medium text-fd-foreground/80">
 					{discussion.author.login}
-					{#if isAdmin(discussion.author.login)}
-						<span class="rounded bg-fd-primary px-1 py-px text-[10px] font-semibold text-fd-primary-foreground">{forumConfig.admins.badgeLabel}</span>
-					{/if}
+					<UserBadges login={discussion.author.login} />
 				</span>
 			{/if}
 			<span>{timeAgo(discussion.createdAt)}</span>

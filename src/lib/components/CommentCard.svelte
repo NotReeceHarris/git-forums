@@ -3,10 +3,11 @@
 	import { addComment } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { Comment } from '$lib/github/types';
-	import { isAdmin, ui } from '$lib/ui.svelte';
+	import { ui } from '$lib/ui.svelte';
 	import { timeAgo } from '$lib/utils';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import ReactionBar from './ReactionBar.svelte';
+	import UserBadges from './UserBadges.svelte';
 
 	let {
 		comment,
@@ -67,9 +68,7 @@
 		>
 			{author.login}
 		</a>
-		{#if isAdmin(author.login)}
-			<span class="rounded bg-fd-primary px-1 py-px text-[10px] font-semibold text-fd-primary-foreground">{forumConfig.admins.badgeLabel}</span>
-		{/if}
+		<UserBadges login={author.login} />
 	{:else}
 		<div class="size-7 rounded-full bg-fd-muted"></div>
 		<span class="text-sm font-medium text-fd-muted-foreground">ghost</span>

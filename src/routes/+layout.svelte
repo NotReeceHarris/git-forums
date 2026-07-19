@@ -6,14 +6,13 @@
 	import SignInDialog from '$lib/components/SignInDialog.svelte';
 	import { auth } from '$lib/github/auth.svelte';
 	import { configIncomplete, forumConfig, themeCss } from '$lib/config';
-	import { loadAdmins, loadCategories, ui } from '$lib/ui.svelte';
+	import { loadCategories, ui } from '$lib/ui.svelte';
 
 	let { children } = $props();
 
 	$effect(() => {
 		if (configIncomplete) return;
 		auth.init();
-		loadAdmins();
 	});
 
 	// categories need an authenticated GraphQL call

@@ -9,14 +9,29 @@
  * Cloudflare dashboard editor.
  *
  * Required configuration:
- *   ALLOWED_ORIGIN        e.g. "https://your-user.github.io"  (var)
- *   GITHUB_CLIENT_ID      OAuth app client id                  (var)
- *   GITHUB_CLIENT_SECRET  OAuth app client secret              (secret!)
+ *   ALLOWED_ORIGINS       comma-separated list of allowed origins, e.g.
+ *                         "https://your-user.github.io,http://localhost:5173"  (var)
+ *   GITHUB_CLIENT_ID      OAuth app client id                                  (var)
+ *   GITHUB_CLIENT_SECRET  OAuth app client secret                              (secret!)
  */
+
+/** Parse the ALLOWED_ORIGINS CSV into a clean list */
+export function parseAllowedOrigins(csv) {
+	return (csv ?? '')
+		.split(',')
+		.map((origin) => origin.trim().replace(/\/+$/, ''))
+		.filter(Boolean);
+}
+
 export default {
 	async fetch(request, env) {
+		const allowed = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+		const origin = request.headers.get('Origin');
+		const originAllowed = origin !== null && allowed.includes(origin);
+
+		// CORS headers echo the specific caller origin (never the whole list)
 		const cors = {
-			'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
+			...(originAllowed ? { 'Access-Control-Allow-Origin': origin } : {}),
 			'Access-Control-Allow-Methods': 'POST, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type',
 			Vary: 'Origin'
@@ -31,8 +46,7 @@ export default {
 		if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
 		// Only accept calls from the forum itself
-		const origin = request.headers.get('Origin');
-		if (origin !== env.ALLOWED_ORIGIN) return json({ error: 'forbidden_origin' }, 403);
+		if (!originAllowed) return json({ error: 'forbidden_origin' }, 403);
 
 		let code;
 		try {
