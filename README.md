@@ -1,6 +1,8 @@
-# Git Forums
+# git-forums
 
-A fully featured forum site powered entirely by **GitHub Discussions** — no backend, no database. It builds to plain static files and runs on **GitHub Pages**. Styled after [Fumadocs](https://github.com/fuma-nama/fumadocs), built with **SvelteKit** (Svelte 5) and **Tailwind CSS v4**.
+[![Follow us on product hunt](https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1273493&theme=light&size=small)](https://www.producthunt.com/products/git-forum?utm_source=badge-follow&utm_medium=badge&utm_source=badge-git&#0045;forum)
+
+A fully featured forum site powered entirely by **GitHub Discussions** — no backend, no database. It builds to plain static files and runs on **GitHub Pages**. Built with **SvelteKit** (Svelte 5) and **Tailwind CSS v4**.
 
 ## How it works
 
