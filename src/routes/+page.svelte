@@ -7,43 +7,37 @@
 	import { listDiscussions } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { DiscussionListItem, PageInfo } from '$lib/github/types';
-	import { ui } from '$lib/ui.svelte';
+	import { loadOverview, ui } from '$lib/ui.svelte';
 
-	let discussions = $state<DiscussionListItem[]>([]);
-	let pageInfo = $state<PageInfo | null>(null);
-	let loading = $state(true);
+	// the first page comes from the shared bootstrap query (ui.home);
+	// "load more" pages accumulate locally
+	let extra = $state<DiscussionListItem[]>([]);
+	let extraPageInfo = $state<PageInfo | null>(null);
 	let loadingMore = $state(false);
 	let error = $state<string | null>(null);
+
+	const discussions = $derived([...(ui.home?.nodes ?? []), ...extra]);
+	const pageInfo = $derived(extraPageInfo ?? ui.home?.pageInfo ?? null);
+	const loading = $derived(ui.home === null);
 
 	let started = false;
 	$effect(() => {
 		if (auth.signedIn && !started) {
 			started = true;
-			load();
+			// revalidates the shared feed when revisiting the home page
+			loadOverview().catch((err) => {
+				error = err instanceof Error ? err.message : 'Failed to load discussions.';
+			});
 		}
 	});
-
-	async function load() {
-		loading = true;
-		error = null;
-		try {
-			const page = await listDiscussions({});
-			discussions = page.nodes;
-			pageInfo = page.pageInfo;
-		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to load discussions.';
-		} finally {
-			loading = false;
-		}
-	}
 
 	async function loadMore() {
 		if (!pageInfo?.hasNextPage) return;
 		loadingMore = true;
 		try {
 			const page = await listDiscussions({ after: pageInfo.endCursor });
-			discussions = [...discussions, ...page.nodes];
-			pageInfo = page.pageInfo;
+			extra = [...extra, ...page.nodes];
+			extraPageInfo = page.pageInfo;
 		} finally {
 			loadingMore = false;
 		}
@@ -89,10 +83,10 @@
 		</div>
 	{/if}
 
-	{#if loading}
-		<Loading />
-	{:else if error}
+	{#if error && discussions.length === 0}
 		<p class="rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-500">{error}</p>
+	{:else if loading}
+		<Loading />
 	{:else if discussions.length === 0}
 		<div class="rounded-2xl border border-dashed border-fd-border py-16 text-center">
 			<p class="font-medium">No discussions yet</p>

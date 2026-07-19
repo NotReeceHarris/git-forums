@@ -1,3 +1,4 @@
+import { invalidateCache } from '$lib/cache';
 import { forumConfig } from '$lib/config';
 import { auth } from './auth.svelte';
 import type {
@@ -5,6 +6,7 @@ import type {
 	Discussion,
 	DiscussionPage,
 	ReactionContent,
+	Reply,
 	RepositoryPermission,
 	SearchResult,
 	Viewer
@@ -43,11 +45,20 @@ async function gql<T>(query: string, variables: Record<string, unknown> = {}): P
 
 const ACTOR = `author { login avatarUrl url }`;
 const REACTIONS = `reactionGroups { content viewerHasReacted reactors { totalCount } }`;
+// Bodies are only needed in lists for excerpts and article detection — skip
+// the (potentially very large) field entirely when neither feature wants it.
+const LIST_NEEDS_BODY = forumConfig.content.listExcerpts || forumConfig.content.articles.enabled;
 const LIST_ITEM = `
-	id number title body createdAt upvoteCount
+	id number title ${LIST_NEEDS_BODY ? 'body' : ''} createdAt upvoteCount
 	${ACTOR}
 	category { id name slug emojiHTML }
 	comments { totalCount }
+`;
+const CATEGORY_FIELDS = `id name slug emojiHTML description isAnswerable`;
+const DISCUSSIONS_PAGE = `
+	totalCount
+	pageInfo { endCursor hasNextPage }
+	nodes { ${LIST_ITEM} }
 `;
 
 /* ------------------------------------------------------------------ */
@@ -56,8 +67,8 @@ const LIST_ITEM = `
 
 const { marker } = forumConfig.content.articles;
 
-export function isArticle(body: string): boolean {
-	return forumConfig.content.articles.enabled && body.startsWith(marker);
+export function isArticle(body: string | undefined): boolean {
+	return forumConfig.content.articles.enabled && !!body && body.startsWith(marker);
 }
 
 export function stripMarker(body: string): string {
@@ -69,47 +80,79 @@ export function stripMarker(body: string): string {
 /* ----------------- */
 
 let repoId: string | null = null;
-let categoriesCache: Category[] | null = null;
-let viewerPermissionCache: RepositoryPermission | null = null;
+let overviewPromise: Promise<ForumOverview> | null = null;
 
-export async function getCategories(): Promise<Category[]> {
-	if (categoriesCache) return categoriesCache;
+export interface ForumOverview {
+	categories: Category[];
+	viewerPermission: RepositoryPermission;
+	/** First page of the all-topics feed (the home page) */
+	discussions: DiscussionPage;
+}
+
+/**
+ * Everything the app needs to boot, in a single GraphQL round-trip:
+ * categories, the viewer's permission, and the first page of discussions.
+ * The session-level promise deduplicates concurrent callers; pass
+ * `fresh: true` to force a revalidation.
+ */
+export function getOverview(opts: { fresh?: boolean } = {}): Promise<ForumOverview> {
+	if (!overviewPromise || opts.fresh) {
+		overviewPromise = fetchOverview().catch((error) => {
+			// don't cache failures — the next call retries
+			overviewPromise = null;
+			throw error;
+		});
+	}
+	return overviewPromise;
+}
+
+async function fetchOverview(): Promise<ForumOverview> {
 	const data = await gql<{
 		repository: {
 			id: string;
 			viewerPermission: RepositoryPermission | null;
 			discussionCategories: { nodes: Category[] };
+			discussions: DiscussionPage;
 		};
 	}>(
-		`query ($owner: String!, $repo: String!) {
+		`query ($owner: String!, $repo: String!, $first: Int!) {
 			repository(owner: $owner, name: $repo) {
 				id
 				viewerPermission
-				discussionCategories(first: 25) {
-					nodes { id name slug emojiHTML description isAnswerable }
+				discussionCategories(first: 25) { nodes { ${CATEGORY_FIELDS} } }
+				discussions(first: $first, orderBy: { field: ${forumConfig.content.sort}, direction: DESC }) {
+					${DISCUSSIONS_PAGE}
 				}
 			}
 		}`,
-		{ owner: forumConfig.repo.owner, repo: forumConfig.repo.name }
+		{
+			owner: forumConfig.repo.owner,
+			repo: forumConfig.repo.name,
+			first: forumConfig.content.pageSize
+		}
 	);
 	repoId = data.repository.id;
-	viewerPermissionCache = data.repository.viewerPermission ?? 'READ';
 	const { include, exclude } = forumConfig.content.topics;
-	categoriesCache = data.repository.discussionCategories.nodes.filter(
-		(c) => (include.length === 0 || include.includes(c.slug)) && !exclude.includes(c.slug)
-	);
-	return categoriesCache;
+	return {
+		categories: data.repository.discussionCategories.nodes.filter(
+			(c) => (include.length === 0 || include.includes(c.slug)) && !exclude.includes(c.slug)
+		),
+		viewerPermission: data.repository.viewerPermission ?? 'READ',
+		discussions: data.repository.discussions
+	};
+}
+
+export async function getCategories(): Promise<Category[]> {
+	return (await getOverview()).categories;
 }
 
 /** The signed-in user's permission on the forum repository (READ for outsiders). */
 export async function getViewerPermission(): Promise<RepositoryPermission> {
-	if (!viewerPermissionCache) await getCategories();
-	// getCategories always fills the cache (falling back to READ)
-	return viewerPermissionCache!;
+	return (await getOverview()).viewerPermission;
 }
 
 async function getRepoId(): Promise<string> {
-	if (!repoId) await getCategories();
+	if (!repoId) await getOverview();
 	return repoId!;
 }
 
@@ -129,9 +172,7 @@ export async function listDiscussions(opts: {
 					first: $first, after: $after, categoryId: $categoryId,
 					orderBy: { field: ${forumConfig.content.sort}, direction: DESC }
 				) {
-					totalCount
-					pageInfo { endCursor hasNextPage }
-					nodes { ${LIST_ITEM} }
+					${DISCUSSIONS_PAGE}
 				}
 			}
 		}`,
@@ -214,16 +255,31 @@ export async function createDiscussion(opts: {
 		}`,
 		{ input: { repositoryId, categoryId: opts.categoryId, title: opts.title, body } }
 	);
+	invalidateCache('discussions');
 	return data.createDiscussion.discussion.number;
 }
 
-export async function addComment(discussionId: string, body: string, replyToId?: string) {
-	await gql(
+/**
+ * Post a comment (or a reply when `replyToId` is set) and return the created
+ * node with everything needed to render it — callers insert it into the
+ * thread optimistically instead of refetching the whole discussion.
+ */
+export async function addComment(
+	discussionId: string,
+	body: string,
+	replyToId?: string
+): Promise<Reply> {
+	const data = await gql<{ addDiscussionComment: { comment: Reply } }>(
 		`mutation ($input: AddDiscussionCommentInput!) {
-			addDiscussionComment(input: $input) { comment { id } }
+			addDiscussionComment(input: $input) {
+				comment { id bodyHTML createdAt ${ACTOR} ${REACTIONS} }
+			}
 		}`,
 		{ input: { discussionId, body, ...(replyToId ? { replyToId } : {}) } }
 	);
+	// comment counts in lists and the thread itself are now stale
+	invalidateCache('discussion');
+	return data.addDiscussionComment.comment;
 }
 
 export async function toggleReaction(subjectId: string, content: ReactionContent, on: boolean) {
@@ -234,6 +290,7 @@ export async function toggleReaction(subjectId: string, content: ReactionContent
 		}`,
 		{ input: { subjectId, content } }
 	);
+	invalidateCache('discussion');
 }
 
 export async function toggleUpvote(subjectId: string, on: boolean) {
@@ -244,6 +301,7 @@ export async function toggleUpvote(subjectId: string, on: boolean) {
 		}`,
 		{ input: { subjectId } }
 	);
+	invalidateCache('discussion');
 }
 
 /* ---------------- */

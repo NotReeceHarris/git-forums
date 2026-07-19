@@ -1,21 +1,24 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-const { mockConfig, mockAuth } = vi.hoisted(() => {
+const { mockConfig, mockAuth, invalidateCache } = vi.hoisted(() => {
+	const invalidateCache = vi.fn();
 	const mockAuth = { token: 'tok' as string | null, signOut: vi.fn() };
 	const mockConfig = {
 		repo: { owner: 'o', name: 'r' },
 		content: {
 			pageSize: 25,
 			sort: 'CREATED_AT',
-			articles: { enabled: true, marker: '<!-- gf:article -->' },
+			listExcerpts: true,
+			articles: { enabled: true, marker: '<!-- dk:article -->' },
 			topics: { include: [] as string[], exclude: [] as string[], restricted: [] as string[] }
 		}
 	};
-	return { mockConfig, mockAuth };
+	return { mockConfig, mockAuth, invalidateCache };
 });
 
 vi.mock('$lib/config', () => ({ forumConfig: mockConfig }));
 vi.mock('$lib/github/auth.svelte', () => ({ auth: mockAuth }));
+vi.mock('$lib/cache', () => ({ invalidateCache }));
 
 let api: typeof import('$lib/github/api');
 let fetchMock: Mock;
@@ -26,8 +29,15 @@ const gqlOk = (data: unknown) => ({
 	json: async () => ({ data })
 });
 
+const feed = {
+	totalCount: 1,
+	pageInfo: { endCursor: 'X', hasNextPage: false },
+	nodes: [{ id: 'd1' }]
+};
+
+// the combined bootstrap query: categories + permission + home feed
 const categoriesData = (nodes: unknown[], viewerPermission: string | null = 'READ') => ({
-	repository: { id: 'RID', viewerPermission, discussionCategories: { nodes } }
+	repository: { id: 'RID', viewerPermission, discussionCategories: { nodes }, discussions: feed }
 });
 
 const cat = (slug: string) => ({
@@ -46,6 +56,8 @@ beforeEach(async () => {
 	mockConfig.content.topics.include = [];
 	mockConfig.content.topics.exclude = [];
 	mockConfig.content.articles.enabled = true;
+	mockConfig.content.listExcerpts = true;
+	invalidateCache.mockClear();
 	fetchMock = vi.fn();
 	vi.stubGlobal('fetch', fetchMock);
 	api = await import('$lib/github/api');
@@ -53,17 +65,17 @@ beforeEach(async () => {
 
 describe('article helpers', () => {
 	it('detects the marker at the start of a body', () => {
-		expect(api.isArticle('<!-- gf:article -->\n\nhi')).toBe(true);
-		expect(api.isArticle('hi <!-- gf:article -->')).toBe(false);
+		expect(api.isArticle('<!-- dk:article -->\n\nhi')).toBe(true);
+		expect(api.isArticle('hi <!-- dk:article -->')).toBe(false);
 	});
 
 	it('never reports articles when the feature is disabled', () => {
 		mockConfig.content.articles.enabled = false;
-		expect(api.isArticle('<!-- gf:article -->\n\nhi')).toBe(false);
+		expect(api.isArticle('<!-- dk:article -->\n\nhi')).toBe(false);
 	});
 
 	it('strips the marker only when present', () => {
-		expect(api.stripMarker('<!-- gf:article -->\n\nbody')).toBe('body');
+		expect(api.stripMarker('<!-- dk:article -->\n\nbody')).toBe('body');
 		expect(api.stripMarker('plain body')).toBe('plain body');
 	});
 });
@@ -130,6 +142,60 @@ describe('getViewerPermission', () => {
 	});
 });
 
+describe('getOverview', () => {
+	it('fetches everything in one round-trip and includes the home feed', async () => {
+		fetchMock.mockResolvedValue(gqlOk(categoriesData([cat('a')], 'WRITE')));
+		const overview = await api.getOverview();
+		expect(overview.discussions).toEqual(feed);
+		expect(overview.viewerPermission).toBe('WRITE');
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+		expect(body.query).toContain('discussionCategories');
+		expect(body.query).toContain('discussions(first: $first');
+	});
+
+	it('deduplicates concurrent callers but honours fresh', async () => {
+		fetchMock.mockResolvedValue(gqlOk(categoriesData([cat('a')])));
+		await Promise.all([api.getOverview(), api.getOverview()]);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		await api.getOverview({ fresh: true });
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
+	it('does not cache failures', async () => {
+		fetchMock.mockResolvedValueOnce({ ok: false, status: 500 });
+		await expect(api.getOverview()).rejects.toThrow(/500/);
+		fetchMock.mockResolvedValue(gqlOk(categoriesData([cat('a')])));
+		await expect(api.getOverview()).resolves.toBeTruthy();
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe('list body field trimming', () => {
+	const load = async () => {
+		vi.resetModules();
+		return await import('$lib/github/api');
+	};
+
+	it('keeps body when only articles are enabled', async () => {
+		mockConfig.content.listExcerpts = false;
+		mockConfig.content.articles.enabled = true;
+		const trimmed = await load();
+		fetchMock.mockResolvedValue(gqlOk({ repository: { discussions: feed } }));
+		await trimmed.listDiscussions({});
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body).query).toMatch(/\bbody\b/);
+	});
+
+	it('omits body when excerpts and articles are both disabled', async () => {
+		mockConfig.content.listExcerpts = false;
+		mockConfig.content.articles.enabled = false;
+		const trimmed = await load();
+		fetchMock.mockResolvedValue(gqlOk({ repository: { discussions: feed } }));
+		await trimmed.listDiscussions({});
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body).query).not.toMatch(/\bbody\b/);
+	});
+});
+
 describe('listDiscussions', () => {
 	const page = {
 		totalCount: 1,
@@ -189,13 +255,14 @@ describe('createDiscussion', () => {
 		expect(number).toBe(42);
 		const body = JSON.parse(fetchMock.mock.calls[1][1].body);
 		expect(body.variables.input).toEqual({ repositoryId: 'RID', categoryId: 'C', title: 'T', body: 'B' });
+		expect(invalidateCache).toHaveBeenCalledWith('discussions');
 	});
 
 	it('prepends the article marker for articles', async () => {
 		setup();
 		await api.createDiscussion({ categoryId: 'C', title: 'T', body: 'B', article: true });
 		const body = JSON.parse(fetchMock.mock.calls[1][1].body);
-		expect(body.variables.input.body).toBe('<!-- gf:article -->\n\nB');
+		expect(body.variables.input.body).toBe('<!-- dk:article -->\n\nB');
 	});
 
 	it('reuses the cached repo id on later posts', async () => {
@@ -216,6 +283,7 @@ describe('addComment', () => {
 		await api.addComment('DID', 'hello');
 		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
 		expect(body.variables.input).toEqual({ discussionId: 'DID', body: 'hello' });
+		expect(invalidateCache).toHaveBeenCalledWith('discussion');
 	});
 
 	it('sends a threaded reply', async () => {
@@ -247,6 +315,7 @@ describe('reactions and upvotes', () => {
 		const body = JSON.parse(fetchMock.mock.calls[0][1].body);
 		expect(body.query).toContain(mutation);
 		expect(body.variables.input).toEqual({ subjectId: 'SID' });
+		expect(invalidateCache).toHaveBeenCalledWith('discussion');
 	});
 });
 

@@ -1,13 +1,16 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-const { mockConfig } = vi.hoisted(() => ({
+const { mockConfig, setCacheScope, clearCache } = vi.hoisted(() => ({
 	mockConfig: {
 		repo: { owner: 'o', name: 'r' },
 		auth: { allowToken: true, oauth: { clientId: '', proxyUrl: '' } }
-	}
+	},
+	setCacheScope: vi.fn(),
+	clearCache: vi.fn()
 }));
 
 vi.mock('$lib/config', () => ({ forumConfig: mockConfig }));
+vi.mock('$lib/cache', () => ({ setCacheScope, clearCache }));
 
 let auth: (typeof import('$lib/github/auth.svelte'))['auth'];
 let fetchMock: Mock;
@@ -24,6 +27,8 @@ beforeEach(async () => {
 	localStorage.clear();
 	sessionStorage.clear();
 	mockConfig.auth.oauth = { clientId: '', proxyUrl: '' };
+	setCacheScope.mockClear();
+	clearCache.mockClear();
 	fetchMock = vi.fn();
 	vi.stubGlobal('fetch', fetchMock);
 	({ auth } = await import('$lib/github/auth.svelte'));
@@ -38,7 +43,7 @@ describe('init', () => {
 	});
 
 	it('restores a valid stored token', async () => {
-		localStorage.setItem('gf:token', 'stored');
+		localStorage.setItem('dk:token', 'stored');
 		fetchMock.mockResolvedValue(viewerOk);
 		await auth.init();
 		expect(auth.token).toBe('stored');
@@ -47,11 +52,11 @@ describe('init', () => {
 	});
 
 	it('drops a revoked stored token silently', async () => {
-		localStorage.setItem('gf:token', 'revoked');
+		localStorage.setItem('dk:token', 'revoked');
 		fetchMock.mockResolvedValue({ ok: false, status: 401 });
 		await auth.init();
 		expect(auth.token).toBeNull();
-		expect(localStorage.getItem('gf:token')).toBeNull();
+		expect(localStorage.getItem('dk:token')).toBeNull();
 		expect(auth.loading).toBe(false);
 	});
 });
@@ -62,7 +67,9 @@ describe('signInWithToken', () => {
 		await auth.signInWithToken('  tok  ');
 		expect(auth.token).toBe('tok');
 		expect(auth.viewer).toEqual(viewer);
-		expect(localStorage.getItem('gf:token')).toBe('tok');
+		expect(localStorage.getItem('dk:token')).toBe('tok');
+		// cache entries become scoped to this user
+		expect(setCacheScope).toHaveBeenCalledWith('alice');
 		const init = fetchMock.mock.calls[0][1];
 		expect(init.headers.Authorization).toBe('Bearer tok');
 	});
@@ -74,7 +81,7 @@ describe('signInWithToken', () => {
 			json: async () => ({ errors: [{ message: 'Bad credentials' }] })
 		});
 		await expect(auth.signInWithToken('bad')).rejects.toThrow('Bad credentials');
-		expect(localStorage.getItem('gf:token')).toBeNull();
+		expect(localStorage.getItem('dk:token')).toBeNull();
 	});
 });
 
@@ -88,7 +95,7 @@ describe('oauth', () => {
 	it('beginOAuth stores a state nonce', () => {
 		mockConfig.auth.oauth = { clientId: 'cid', proxyUrl: 'http://proxy' };
 		auth.beginOAuth('http://site/auth/callback');
-		expect(sessionStorage.getItem('gf:oauth-state')).toBeTruthy();
+		expect(sessionStorage.getItem('dk:oauth-state')).toBeTruthy();
 	});
 
 	it('completeOAuth rejects on a state mismatch', async () => {
@@ -97,21 +104,21 @@ describe('oauth', () => {
 
 	it('completeOAuth rejects when the proxy fails', async () => {
 		mockConfig.auth.oauth = { clientId: 'cid', proxyUrl: 'http://proxy' };
-		sessionStorage.setItem('gf:oauth-state', 'S');
+		sessionStorage.setItem('dk:oauth-state', 'S');
 		fetchMock.mockResolvedValue({ ok: false, status: 500 });
 		await expect(auth.completeOAuth('code', 'S')).rejects.toThrow(/exchange failed/i);
 	});
 
 	it('completeOAuth rejects when no token is returned', async () => {
 		mockConfig.auth.oauth = { clientId: 'cid', proxyUrl: 'http://proxy' };
-		sessionStorage.setItem('gf:oauth-state', 'S');
+		sessionStorage.setItem('dk:oauth-state', 'S');
 		fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
 		await expect(auth.completeOAuth('code', 'S')).rejects.toThrow(/no token/i);
 	});
 
 	it('completeOAuth exchanges the code and signs in', async () => {
 		mockConfig.auth.oauth = { clientId: 'cid', proxyUrl: 'http://proxy' };
-		sessionStorage.setItem('gf:oauth-state', 'S');
+		sessionStorage.setItem('dk:oauth-state', 'S');
 		fetchMock
 			.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ access_token: 'oat' }) })
 			.mockResolvedValueOnce(viewerOk);
@@ -121,7 +128,7 @@ describe('oauth', () => {
 		// proxy call carried the code
 		expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ code: 'code' });
 		// nonce is single-use
-		expect(sessionStorage.getItem('gf:oauth-state')).toBeNull();
+		expect(sessionStorage.getItem('dk:oauth-state')).toBeNull();
 	});
 });
 
@@ -132,6 +139,9 @@ describe('signOut', () => {
 		auth.signOut();
 		expect(auth.token).toBeNull();
 		expect(auth.viewer).toBeNull();
-		expect(localStorage.getItem('gf:token')).toBeNull();
+		expect(localStorage.getItem('dk:token')).toBeNull();
+		// cached GraphQL data is wiped and the scope reset
+		expect(clearCache).toHaveBeenCalled();
+		expect(setCacheScope).toHaveBeenCalledWith(null);
 	});
 });

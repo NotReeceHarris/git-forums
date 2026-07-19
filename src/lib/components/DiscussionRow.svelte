@@ -42,9 +42,11 @@
 				</span>
 			{/if}
 		</div>
-		<p class="mt-0.5 line-clamp-2 text-sm text-fd-muted-foreground">
-			{excerpt(discussion.body)}
-		</p>
+		{#if forumConfig.content.listExcerpts && discussion.body}
+			<p class="mt-0.5 line-clamp-2 text-sm text-fd-muted-foreground">
+				{excerpt(discussion.body)}
+			</p>
+		{/if}
 		<div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fd-muted-foreground">
 			{#if discussion.author}
 				<span class="inline-flex items-center gap-1 font-medium text-fd-foreground/80">

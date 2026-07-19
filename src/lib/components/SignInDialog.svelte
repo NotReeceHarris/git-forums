@@ -91,9 +91,9 @@
 
 			{#if tokenSignIn}
 			<form onsubmit={submitToken}>
-				<label class="mb-1 block text-sm font-medium" for="gf-token">Personal access token</label>
+				<label class="mb-1 block text-sm font-medium" for="dk-token">Personal access token</label>
 				<input
-					id="gf-token"
+					id="dk-token"
 					type="password"
 					bind:value={token}
 					placeholder="github_pat_…"

@@ -1,21 +1,31 @@
+import { swr } from './cache';
 import { forumConfig } from './config';
-import { getCategories, getViewerPermission } from './github/api';
-import type { Category, RepositoryPermission } from './github/types';
+import { getOverview } from './github/api';
+import type { Category, DiscussionPage, RepositoryPermission } from './github/types';
 
 /** Small cross-component UI state */
 export const ui = $state({
 	signInOpen: false,
 	categories: [] as Category[],
 	categoriesLoaded: false,
-	viewerPermission: 'READ' as RepositoryPermission
+	viewerPermission: 'READ' as RepositoryPermission,
+	/** First page of the all-topics feed, shared by layout bootstrap and home */
+	home: null as DiscussionPage | null
 });
 
-/** Requires a signed-in user (GraphQL). Safe to call repeatedly. */
-export async function loadCategories() {
-	if (ui.categoriesLoaded) return;
-	ui.categories = await getCategories();
-	ui.viewerPermission = await getViewerPermission();
-	ui.categoriesLoaded = true;
+/**
+ * Boot the forum in one GraphQL round-trip: categories, viewer permission and
+ * the home feed. Safe to call repeatedly — the layout and the home page both
+ * call it, sharing a single in-flight request; later calls revalidate.
+ */
+export async function loadOverview() {
+	const revalidate = ui.categoriesLoaded;
+	await swr('overview', () => getOverview({ fresh: revalidate }), (data) => {
+		ui.categories = data.categories;
+		ui.viewerPermission = data.viewerPermission;
+		ui.home = data.discussions;
+		ui.categoriesLoaded = true;
+	});
 }
 
 export function isAdmin(login: string | undefined | null): boolean {
@@ -50,5 +60,5 @@ export function postableCategories(): Category[] {
 
 export function toggleTheme() {
 	const dark = document.documentElement.classList.toggle('dark');
-	localStorage.setItem('gf:theme', dark ? 'dark' : 'light');
+	localStorage.setItem('dk:theme', dark ? 'dark' : 'light');
 }

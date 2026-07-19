@@ -6,7 +6,7 @@
 	import SignInDialog from '$lib/components/SignInDialog.svelte';
 	import { auth } from '$lib/github/auth.svelte';
 	import { configIncomplete, forumConfig, themeCss } from '$lib/config';
-	import { loadCategories, ui } from '$lib/ui.svelte';
+	import { loadOverview, ui } from '$lib/ui.svelte';
 
 	let { children } = $props();
 
@@ -15,9 +15,10 @@
 		auth.init();
 	});
 
-	// categories need an authenticated GraphQL call
+	// forum data needs an authenticated GraphQL call; one combined query
+	// bootstraps categories, permission, and the home feed
 	$effect(() => {
-		if (auth.signedIn) loadCategories();
+		if (auth.signedIn && !ui.categoriesLoaded) loadOverview();
 	});
 </script>
 

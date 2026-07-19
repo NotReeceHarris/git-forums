@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { swr } from '$lib/cache';
 	import DiscussionRow from '$lib/components/DiscussionRow.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import SignInPrompt from '$lib/components/SignInPrompt.svelte';
@@ -39,9 +40,11 @@
 		discussions = [];
 		filter = 'all';
 		try {
-			const result = await listDiscussions({ categoryId });
-			discussions = result.nodes;
-			pageInfo = result.pageInfo;
+			await swr(`discussions:cat:${categoryId}`, () => listDiscussions({ categoryId }), (result) => {
+				discussions = result.nodes;
+				pageInfo = result.pageInfo;
+				loading = false;
+			});
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to load topic.';
 		} finally {

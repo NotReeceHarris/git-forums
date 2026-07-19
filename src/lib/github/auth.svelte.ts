@@ -1,8 +1,9 @@
+import { clearCache, setCacheScope } from '$lib/cache';
 import { forumConfig } from '$lib/config';
 import type { Viewer } from './types';
 
-const TOKEN_KEY = 'gf:token';
-const STATE_KEY = 'gf:oauth-state';
+const TOKEN_KEY = 'dk:token';
+const STATE_KEY = 'dk:oauth-state';
 
 class Auth {
 	token = $state<string | null>(null);
@@ -73,6 +74,9 @@ class Auth {
 		this.token = null;
 		this.viewer = null;
 		localStorage.removeItem(TOKEN_KEY);
+		// cached GraphQL data may contain viewer-specific fields — drop it all
+		clearCache();
+		setCacheScope(null);
 	}
 
 	private async fetchViewer() {
@@ -88,6 +92,8 @@ class Auth {
 		const json = await res.json();
 		if (json.errors?.length) throw new Error(json.errors[0].message);
 		this.viewer = json.data.viewer as Viewer;
+		// cache entries are isolated per signed-in user
+		setCacheScope(this.viewer.login);
 	}
 }
 
