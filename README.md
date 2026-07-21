@@ -4,6 +4,8 @@
 
 A fully featured forum site powered entirely by **GitHub Discussions** — no backend, no database. It builds to plain static files and runs on **GitHub Pages**. Built with **SvelteKit** (Svelte 5) and **Tailwind CSS v4**.
 
+Deep-dive documentation lives in [`docs/`](docs/README.md) — architecture, [data syncing](docs/data-sync.md) (with flow diagram), [reputation](docs/reputation.md), and the [read-only archive](docs/archive.md).
+
 ## How it works
 
 - **Topics** are your repository's Discussion categories.
