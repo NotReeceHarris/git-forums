@@ -7,6 +7,8 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  # required by actions/upload-code-coverage (GitHub code-coverage merge protection)
+  code-quality: write
 
 jobs:
   test:
@@ -37,6 +39,20 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 14
+
+      # Feeds the "Restrict code coverage" ruleset: GitHub compares the
+      # uploaded Cobertura data against the configured thresholds before
+      # allowing a merge. Runs even when the test step failed so GitHub still
+      # sees the (sub-threshold) numbers; fork PRs can't upload (no write
+      # token), which the action handles by exiting with a notice.
+      - name: Upload coverage to GitHub code quality
+        if: always()
+        uses: actions/upload-code-coverage@v1
+        with:
+          file: coverage/cobertura-coverage.xml
+          language: TypeScript
+          label: code-coverage/vitest
+          fail-on-error: false
 
       - name: Comment coverage table on PR
         if: always() && github.event_name == 'pull_request'
