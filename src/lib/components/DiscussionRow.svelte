@@ -12,19 +12,28 @@
 	}: { discussion: DiscussionListItem; showCategory?: boolean } = $props();
 
 	const article = $derived(isArticle(discussion.body));
+	const href = $derived(resolve('/d/[number]', { number: String(discussion.number) }));
 </script>
 
-<a
-	href={resolve('/d/[number]', { number: String(discussion.number) })}
-	class="group flex gap-3 rounded-xl border border-fd-border bg-fd-card p-4 transition-colors hover:border-fd-ring/50 hover:bg-fd-accent/40"
+<!-- The whole card is clickable via the title's stretched overlay link; the
+     author avatar/name are separate links (to the profile page) layered above
+     it, since anchors can't nest. -->
+<div
+	class="group relative flex gap-3 rounded-xl border border-fd-border bg-fd-card p-4 transition-colors hover:border-fd-ring/50 hover:bg-fd-accent/40"
 >
 	{#if discussion.author}
-		<img
-			src={discussion.author.avatarUrl}
-			alt={discussion.author.login}
-			class="mt-0.5 size-9 shrink-0 rounded-full border border-fd-border"
-			loading="lazy"
-		/>
+		<a
+			href={resolve('/u/[login]', { login: discussion.author.login })}
+			class="relative z-10 mt-0.5 shrink-0 self-start"
+			title="View @{discussion.author.login}'s profile"
+		>
+			<img
+				src={discussion.author.avatarUrl}
+				alt={discussion.author.login}
+				class="size-9 rounded-full border border-fd-border"
+				loading="lazy"
+			/>
+		</a>
 	{:else}
 		<div class="mt-0.5 size-9 shrink-0 rounded-full bg-fd-muted"></div>
 	{/if}
@@ -32,7 +41,9 @@
 	<div class="min-w-0 flex-1">
 		<div class="flex items-center gap-2">
 			<h3 class="truncate font-medium group-hover:text-fd-foreground">
-				{discussion.title}
+				<a {href} class="after:absolute after:inset-0">
+					{discussion.title}
+				</a>
 			</h3>
 			{#if article}
 				<span
@@ -50,7 +61,12 @@
 		<div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fd-muted-foreground">
 			{#if discussion.author}
 				<span class="inline-flex items-center gap-1 font-medium text-fd-foreground/80">
-					{discussion.author.login}
+					<a
+						href={resolve('/u/[login]', { login: discussion.author.login })}
+						class="relative z-10 hover:underline"
+					>
+						{discussion.author.login}
+					</a>
 					<UserBadges login={discussion.author.login} />
 				</span>
 			{/if}
@@ -75,4 +91,4 @@
 			</span>
 		</div>
 	</div>
-</a>
+</div>

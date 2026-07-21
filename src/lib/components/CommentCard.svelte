@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { forumConfig } from '$lib/config';
 	import { addComment } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
@@ -62,9 +63,7 @@
 			loading="lazy"
 		/>
 		<a
-			href={author.url}
-			target="_blank"
-			rel="noreferrer"
+			href={resolve('/u/[login]', { login: author.login })}
 			class="text-sm font-medium hover:underline"
 		>
 			{author.login}

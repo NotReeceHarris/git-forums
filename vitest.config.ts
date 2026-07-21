@@ -27,7 +27,8 @@ export default defineConfig({
 			// production build + browser verification, not unit tests.
 			include: ['src/lib/**/*.ts', 'oauth-proxy/worker.js'],
 			exclude: ['src/lib/github/types.ts', 'src/lib/index.ts'],
-			reporter: ['text', 'html', 'json-summary'],
+			// cobertura feeds GitHub's code-coverage merge protection (uploaded in CI)
+			reporter: ['text', 'html', 'json-summary', 'cobertura'],
 			thresholds: {
 				statements: 100,
 				branches: 100,

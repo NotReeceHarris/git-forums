@@ -95,9 +95,7 @@
 						class="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border border-fd-border bg-fd-card py-1 shadow-xl"
 					>
 						<a
-							href={auth.viewer.url}
-							target="_blank"
-							rel="noreferrer"
+							href={resolve('/u/[login]', { login: auth.viewer.login })}
 							class="block px-3 py-2 text-sm hover:bg-fd-accent"
 						>
 							<span class="block font-medium">{auth.viewer.name ?? auth.viewer.login}</span>
