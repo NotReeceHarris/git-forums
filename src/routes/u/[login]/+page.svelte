@@ -128,6 +128,12 @@
 				<p class="mt-1 text-sm text-fd-muted-foreground">{profile.bio}</p>
 			{/if}
 			<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-fd-muted-foreground">
+				{#if repFor(profile.login) !== null}
+					<span title="Reputation earned on this forum">
+						<strong class="font-semibold text-fd-foreground">{repFor(profile.login)}</strong>
+						rep
+					</span>
+				{/if}
 				<span title="Posts on this forum">
 					<strong class="font-semibold text-fd-foreground">{profile.discussions.totalCount}</strong>
 					{profile.discussions.totalCount === 1 ? 'post' : 'posts'}
@@ -136,12 +142,6 @@
 					<strong class="font-semibold text-fd-foreground">{profile.comments.totalCount}</strong>
 					{profile.comments.totalCount === 1 ? 'comment' : 'comments'}
 				</span>
-				{#if repFor(profile.login) !== null}
-					<span title="Reputation earned on this forum">
-						<strong class="font-semibold text-fd-foreground">{repFor(profile.login)}</strong>
-						rep
-					</span>
-				{/if}
 				<span title={formatDate(profile.createdAt)}>
 					Joined GitHub {formatDate(profile.createdAt)}
 				</span>

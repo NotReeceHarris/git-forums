@@ -65,9 +65,13 @@ export async function loadRep(): Promise<void> {
 	ui.repLedger = await fetchLedger();
 }
 
-/** A user's rep for display; null when the feature is off or not yet loaded */
+/**
+ * A user's rep for display; null only when the feature is off. Before the
+ * ledger loads (or exists) everyone reads 0, so rep is visible immediately
+ * after enabling the feature.
+ */
 export function repFor(login: string | null | undefined): number | null {
-	if (!forumConfig.rep.enabled || !ui.repLedger) return null;
+	if (!forumConfig.rep.enabled) return null;
 	return repOf(ui.repLedger, login);
 }
 

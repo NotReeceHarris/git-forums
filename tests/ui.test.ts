@@ -151,10 +151,10 @@ describe('reputation', () => {
 	});
 
 	describe('repFor', () => {
-		it('returns null when disabled or before the ledger loads', async () => {
+		it('returns null when disabled, 0 before the ledger loads', async () => {
 			expect(mod.repFor('guest')).toBeNull();
 			enableRep();
-			expect(mod.repFor('guest')).toBeNull();
+			expect(mod.repFor('guest')).toBe(0);
 		});
 
 		it('reads rep from the loaded ledger', async () => {

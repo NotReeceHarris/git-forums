@@ -75,14 +75,14 @@ export default defineForumConfig({
 	// require a minimum rep to post. The rep.yml workflow maintains the
 	// ledger (rep-data branch) and reactively moderates posts made directly
 	// on github.com. Uncomment to enable:
-	// rep: {
-	// 	enabled: true,
-	// 	gains: { post: 5, comment: 2, answerAccepted: 15 },
-	// 	dailyCaps: { post: 25, comment: 10 },      // rep per UTC day, 0 = uncapped
-	// 	topics: { showcase: 50 },                  // slug → min rep to post
-	// 	onViolation: 'move',                       // 'move' | 'lock' | 'delete'
-	// 	fallbackTopic: 'general'                   // where moved posts land
-	// },
+	rep: {
+		enabled: true,
+		gains: { post: 5, comment: 2, answerAccepted: 15 },
+		dailyCaps: { post: 25, comment: 10 },      // rep per UTC day, 0 = uncapped
+		topics: { showcase: 50 },                  // slug → min rep to post
+		onViolation: 'move',                       // 'move' | 'lock' | 'delete'
+		fallbackTopic: 'general'                   // where moved posts land
+	},
 
 	// Override any CSS token per scheme, e.g. a blue primary:
 	theme: {
