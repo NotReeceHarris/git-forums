@@ -374,6 +374,176 @@ describe('reactions and upvotes', () => {
 	});
 });
 
+describe('user profiles', () => {
+	const gqlWithErrors = (data: unknown, errors: unknown[]) => ({
+		ok: true,
+		status: 200,
+		json: async () => ({ data, errors })
+	});
+
+	const ownPost = (id: string, login = 'Alice') => ({
+		id,
+		author: { login },
+		repository: { nameWithOwner: 'o/r' }
+	});
+
+	const ownComment = (id: string, login = 'Alice', repo = 'o/r') => ({
+		id,
+		bodyText: 'hi',
+		createdAt: '2026-01-01T00:00:00Z',
+		author: login ? { login } : null,
+		discussion: { number: 1, title: 'T', repository: { nameWithOwner: repo } }
+	});
+
+	const profileUser = (over: Record<string, unknown> = {}) => ({
+		login: 'alice',
+		name: 'Alice',
+		avatarUrl: 'a.png',
+		url: 'https://github.com/alice',
+		bio: 'hey',
+		createdAt: '2020-01-01T00:00:00Z',
+		repository: { object: { text: '# readme' } },
+		repositoryDiscussions: {
+			totalCount: 2,
+			pageInfo: { endCursor: 'C', hasNextPage: false },
+			nodes: [ownPost('d1'), ownPost('d2')]
+		},
+		repositoryDiscussionComments: {
+			totalCount: 2,
+			nodes: [ownComment('c1'), ownComment('c2')]
+		},
+		...over
+	});
+
+	// every profile call resolves the repo id first (one overview round-trip)
+	const setup = (profileResponse: unknown) => {
+		fetchMock.mockResolvedValueOnce(gqlOk(categoriesData([cat('a')])));
+		fetchMock.mockResolvedValueOnce(profileResponse as never);
+	};
+
+	describe('getUserProfile', () => {
+		it('returns identity, readme, posts, and comments (case-insensitive author match)', async () => {
+			setup(gqlOk({ user: profileUser() }));
+			const profile = await api.getUserProfile('alice');
+			expect(profile).toMatchObject({
+				login: 'alice',
+				name: 'Alice',
+				readme: '# readme',
+				discussions: { totalCount: 2 },
+				comments: { totalCount: 2 }
+			});
+			expect(profile.discussions.nodes.map((n) => n.id)).toEqual(['d1', 'd2']);
+			expect(profile.comments.nodes.map((n) => n.id)).toEqual(['c1', 'c2']);
+			const body = JSON.parse(fetchMock.mock.calls[1][1].body);
+			expect(body.variables).toMatchObject({ login: 'alice', repositoryId: 'RID', first: 25 });
+		});
+
+		it('drops posts and comments leaked from other authors or repos, degrading counts', async () => {
+			setup(
+				gqlOk({
+					user: profileUser({
+						repositoryDiscussions: {
+							totalCount: 9,
+							pageInfo: { endCursor: 'C', hasNextPage: false },
+							nodes: [ownPost('d1'), ownPost('leak-author', 'mallory')]
+						},
+						repositoryDiscussionComments: {
+							totalCount: 9,
+							nodes: [
+								ownComment('c1'),
+								ownComment('leak-author', 'mallory'),
+								ownComment('leak-repo', 'Alice', 'other/repo'),
+								ownComment('leak-ghost', '')
+							]
+						}
+					})
+				})
+			);
+			const profile = await api.getUserProfile('alice');
+			expect(profile.discussions.totalCount).toBe(1);
+			expect(profile.discussions.nodes.map((n) => n.id)).toEqual(['d1']);
+			expect(profile.comments.totalCount).toBe(1);
+			expect(profile.comments.nodes.map((n) => n.id)).toEqual(['c1']);
+		});
+
+		it('returns a null readme when the profile repo is missing (tolerated NOT_FOUND)', async () => {
+			setup(
+				gqlWithErrors({ user: profileUser({ repository: null }) }, [
+					{ type: 'NOT_FOUND', message: "Could not resolve to a Repository with the name 'alice/alice'." }
+				])
+			);
+			const profile = await api.getUserProfile('alice');
+			expect(profile.readme).toBeNull();
+		});
+
+		it('returns a null readme when the repo exists without a README', async () => {
+			setup(gqlOk({ user: profileUser({ repository: { object: null } }) }));
+			expect((await api.getUserProfile('alice')).readme).toBeNull();
+		});
+
+		it('still rejects on non-NOT_FOUND errors', async () => {
+			setup(gqlWithErrors({ user: profileUser() }, [{ type: 'FORBIDDEN', message: 'nope' }]));
+			await expect(api.getUserProfile('alice')).rejects.toThrow('nope');
+		});
+
+		it('rejects when NOT_FOUND comes without data', async () => {
+			setup(gqlWithErrors(null, [{ type: 'NOT_FOUND', message: 'gone' }]));
+			await expect(api.getUserProfile('alice')).rejects.toThrow('gone');
+		});
+
+		it('throws a 404 when the user does not exist', async () => {
+			setup(
+				gqlWithErrors({ user: null }, [
+					{ type: 'NOT_FOUND', message: "Could not resolve to a User with the login of 'nobody'." }
+				])
+			);
+			await expect(api.getUserProfile('nobody')).rejects.toThrow(/User not found/);
+		});
+	});
+
+	describe('listUserDiscussions', () => {
+		it('pages with the cursor and filters leaked nodes', async () => {
+			setup(
+				gqlOk({
+					user: {
+						repositoryDiscussions: {
+							totalCount: 9,
+							pageInfo: { endCursor: 'C2', hasNextPage: true },
+							nodes: [ownPost('d3'), ownPost('leak', 'mallory')]
+						}
+					}
+				})
+			);
+			const out = await api.listUserDiscussions('alice', 'CUR');
+			expect(out.pageInfo).toEqual({ endCursor: 'C2', hasNextPage: true });
+			expect(out.totalCount).toBe(1);
+			expect(out.nodes.map((n) => n.id)).toEqual(['d3']);
+			const body = JSON.parse(fetchMock.mock.calls[1][1].body);
+			expect(body.variables).toMatchObject({ login: 'alice', after: 'CUR', repositoryId: 'RID' });
+		});
+
+		it('trusts the server totalCount when nothing was dropped', async () => {
+			setup(
+				gqlOk({
+					user: {
+						repositoryDiscussions: {
+							totalCount: 7,
+							pageInfo: { endCursor: null, hasNextPage: false },
+							nodes: [ownPost('d1')]
+						}
+					}
+				})
+			);
+			expect((await api.listUserDiscussions('alice', null)).totalCount).toBe(7);
+		});
+
+		it('throws a 404 when the user does not exist', async () => {
+			setup(gqlOk({ user: null }));
+			await expect(api.listUserDiscussions('nobody', null)).rejects.toThrow(/User not found/);
+		});
+	});
+});
+
 describe('renderMarkdown', () => {
 	it('POSTs to the markdown API with auth and returns HTML', async () => {
 		fetchMock.mockResolvedValue({ ok: true, status: 200, text: async () => '<p>hi</p>' });
@@ -389,6 +559,15 @@ describe('renderMarkdown', () => {
 		fetchMock.mockResolvedValue({ ok: true, status: 200, text: async () => 'x' });
 		await api.renderMarkdown('hi');
 		expect(fetchMock.mock.calls[0][1].headers.Authorization).toBeUndefined();
+	});
+
+	it('honours an explicit mode and context (profile READMEs)', async () => {
+		fetchMock.mockResolvedValue({ ok: true, status: 200, text: async () => 'x' });
+		await api.renderMarkdown('hi', { context: 'alice/alice', mode: 'markdown' });
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+			mode: 'markdown',
+			context: 'alice/alice'
+		});
 	});
 
 	it('throws when the request fails', async () => {
