@@ -21,7 +21,8 @@
 	} from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { Comment, Discussion, Reply } from '$lib/github/types';
-	import { isMaintainer, ui } from '$lib/ui.svelte';
+	import { fetchArchivedDiscussion } from '$lib/archive/client';
+	import { archiveMode, isMaintainer, ui } from '$lib/ui.svelte';
 	import { formatDate, timeAgo } from '$lib/utils';
 
 	let discussion = $state<Discussion | null>(null);
@@ -107,7 +108,11 @@
 
 	let loadedFor: number | null = null;
 	$effect(() => {
-		if (auth.signedIn && Number.isFinite(number) && loadedFor !== number) {
+		if (
+			(auth.signedIn || (!auth.loading && archiveMode())) &&
+			Number.isFinite(number) &&
+			loadedFor !== number
+		) {
 			loadedFor = number;
 			load();
 		}
@@ -116,6 +121,15 @@
 	async function load() {
 		loading = true;
 		error = null;
+		// read-only archive mode: serve the archived snapshot of the thread
+		if (archiveMode()) {
+			discussion = await fetchArchivedDiscussion(number);
+			if (!discussion) {
+				error = 'This post is not in the read-only archive yet — sign in to view it live.';
+			}
+			loading = false;
+			return;
+		}
 		try {
 			await swr(`discussion:${number}`, () => getDiscussion(number), (fresh) => {
 				discussion = fresh;
@@ -164,6 +178,10 @@
 	}
 
 	async function upvote() {
+		if (!auth.signedIn) {
+			ui.signInOpen = true;
+			return;
+		}
 		if (!discussion || upvoteBusy) return;
 		upvoteBusy = true;
 		const on = !discussion.viewerHasUpvoted;
@@ -186,7 +204,7 @@
 
 {#if auth.loading}
 	<Loading />
-{:else if !auth.signedIn}
+{:else if !auth.signedIn && !archiveMode()}
 	<SignInPrompt />
 {:else if loading}
 	<Loading />
@@ -368,6 +386,18 @@
 				<p class="mt-6 rounded-xl border border-fd-border bg-fd-muted/50 p-4 text-sm text-fd-muted-foreground">
 					This discussion is locked. New comments are disabled.
 				</p>
+			{:else if !auth.signedIn}
+				<div class="mt-6 rounded-xl border border-fd-border bg-fd-muted/50 p-4 text-center text-sm text-fd-muted-foreground">
+					You're viewing a read-only snapshot.
+					<button
+						type="button"
+						onclick={() => (ui.signInOpen = true)}
+						class="font-medium text-fd-link hover:underline"
+					>
+						Sign in
+					</button>
+					to join the discussion.
+				</div>
 			{:else}
 				<form onsubmit={submitComment} class="mt-6">
 					<h3 class="mb-2 text-sm font-medium">Add a comment</h3>

@@ -1,3 +1,4 @@
+import { fetchArchiveIndex, fetchArchiveMeta } from './archive/client';
 import { swr } from './cache';
 import { forumConfig } from './config';
 import { getOverview } from './github/api';
@@ -23,22 +24,62 @@ export const ui = $state({
 	pinned: [] as DiscussionListItem[],
 	/** Actions-maintained rep ledger (null until loaded / when unavailable) */
 	repLedger: null as RepLedger | null,
-	repLoaded: false
+	repLoaded: false,
+	/**
+	 * The overview was booted from the read-only archive (signed-out visitor).
+	 * Signing in re-runs the bootstrap against the live API.
+	 */
+	bootedFromArchive: false
 });
+
+/**
+ * Read-only archive mode: the visitor is signed out and the forum has a
+ * cold-store archive to serve instead of the (auth-only) GitHub API.
+ */
+export function archiveMode(): boolean {
+	return forumConfig.archive.enabled && !auth.signedIn;
+}
+
+/** Config include/exclude filtering, mirroring the API bootstrap */
+function visibleSlug(slug: string): boolean {
+	const { include, exclude } = forumConfig.content.topics;
+	return (include.length === 0 || include.includes(slug)) && !exclude.includes(slug);
+}
 
 /**
  * Boot the forum in one GraphQL round-trip: categories, viewer permission and
  * the home feed. Safe to call repeatedly — the layout and the home page both
  * call it, sharing a single in-flight request; later calls revalidate.
+ *
+ * Signed-out visitors with the archive enabled boot from the archived
+ * snapshot instead — same shapes, no auth, read-only.
  */
 export async function loadOverview() {
-	const revalidate = ui.categoriesLoaded;
+	if (archiveMode()) {
+		const [meta, index] = await Promise.all([fetchArchiveMeta(), fetchArchiveIndex()]);
+		// no archive yet (workflow hasn't run) — leave the sign-in prompt up
+		if (!meta || !index) return;
+		ui.categories = meta.categories.filter((c) => visibleSlug(c.slug));
+		ui.viewerPermission = 'READ';
+		const nodes = index.discussions.filter((d) => visibleSlug(d.category.slug));
+		ui.home = {
+			totalCount: nodes.length,
+			pageInfo: { endCursor: null, hasNextPage: false },
+			nodes
+		};
+		ui.pinned = meta.pinned.filter((d) => visibleSlug(d.category.slug));
+		ui.categoriesLoaded = true;
+		ui.bootedFromArchive = true;
+		return;
+	}
+	const revalidate = ui.categoriesLoaded && !ui.bootedFromArchive;
 	await swr('overview', () => getOverview({ fresh: revalidate }), (data) => {
 		ui.categories = data.categories;
 		ui.viewerPermission = data.viewerPermission;
 		ui.home = data.discussions;
 		ui.pinned = data.pinned;
 		ui.categoriesLoaded = true;
+		ui.bootedFromArchive = false;
 	});
 }
 
