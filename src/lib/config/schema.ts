@@ -114,6 +114,40 @@ export interface ForumConfig {
 		reactions: boolean;
 		upvotes: boolean;
 	};
+	/**
+	 * Optional reputation system: users earn rep for forum activity, and topics
+	 * can require a minimum rep to post. The UI gates topics client-side; the
+	 * `rep.yml` GitHub Actions workflow maintains the ledger and enforces the
+	 * same rules against posts made directly on github.com (reactively — GitHub
+	 * has no pre-post hook, so violating posts exist briefly before the
+	 * workflow acts on them).
+	 */
+	rep: {
+		/** Master switch — everything below is inert when false */
+		enabled: boolean;
+		/** Rep awarded per action */
+		gains: {
+			post: number;
+			comment: number;
+			/** Granted by others, so it's weighted higher and never capped */
+			answerAccepted: number;
+		};
+		/**
+		 * Anti-farming: max rep a user can earn per UTC day from each action
+		 * type (0 = uncapped). Accepted answers are never capped.
+		 */
+		dailyCaps: { post: number; comment: number };
+		/** Category slug → minimum rep required to post there */
+		topics: Record<string, number>;
+		/** What the enforcement workflow does with an under-rep post */
+		onViolation: 'move' | 'lock' | 'delete';
+		/** Category slug posts are moved to when `onViolation` is 'move' */
+		fallbackTopic: string;
+		/** Users with push access (and config admins) bypass rep gates */
+		exemptMaintainers: boolean;
+		/** Branch holding the Actions-maintained rep.json ledger */
+		dataBranch: string;
+	};
 	cache: {
 		/**
 		 * Stale-while-revalidate caching of GraphQL responses in localStorage:
@@ -179,6 +213,16 @@ export const defaultConfig: ForumConfig = {
 		search: true,
 		reactions: true,
 		upvotes: true
+	},
+	rep: {
+		enabled: false,
+		gains: { post: 5, comment: 2, answerAccepted: 15 },
+		dailyCaps: { post: 25, comment: 10 },
+		topics: {},
+		onViolation: 'move',
+		fallbackTopic: '',
+		exemptMaintainers: true,
+		dataBranch: 'rep-data'
 	},
 	cache: {
 		enabled: true,

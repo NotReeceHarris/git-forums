@@ -9,6 +9,7 @@
 	import { forumConfig } from '$lib/config';
 	import { getUserProfile, listUserDiscussions, renderMarkdown } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
+	import { repFor } from '$lib/ui.svelte';
 	import type { UserProfile } from '$lib/github/types';
 	import { excerpt, formatDate, timeAgo } from '$lib/utils';
 
@@ -127,6 +128,12 @@
 				<p class="mt-1 text-sm text-fd-muted-foreground">{profile.bio}</p>
 			{/if}
 			<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-fd-muted-foreground">
+				{#if repFor(profile.login) !== null}
+					<span title="Reputation earned on this forum">
+						<strong class="font-semibold text-fd-foreground">{repFor(profile.login)}</strong>
+						rep
+					</span>
+				{/if}
 				<span title="Posts on this forum">
 					<strong class="font-semibold text-fd-foreground">{profile.discussions.totalCount}</strong>
 					{profile.discussions.totalCount === 1 ? 'post' : 'posts'}

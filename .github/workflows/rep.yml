@@ -1,0 +1,64 @@
+name: Reputation
+
+# Maintains the rep ledger and enforces rep-gated topics. The ledger is a
+# deterministic recompute of all forum activity, so runs are idempotent: a
+# superseded queued run loses nothing — the next run produces the same result.
+on:
+  discussion:
+    types: [created, edited, category_changed, answered, unanswered, deleted]
+  discussion_comment:
+    types: [created, deleted]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  discussions: write
+
+# Serialize runs so ledger pushes never race. cancel-in-progress stays false:
+# the in-flight run finishes, at most one run queues behind it, and the final
+# queued run recomputes everything (including enforcement, which sweeps recent
+# posts rather than only the triggering event).
+concurrency:
+  group: rep-ledger
+  cancel-in-progress: false
+
+jobs:
+  rep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare ledger branch worktree
+        run: |
+          BRANCH=rep-data
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH:$BRANCH"
+            git worktree add .rep-data "$BRANCH"
+          else
+            git worktree add --orphan -b "$BRANCH" .rep-data
+          fi
+
+      - name: Recompute ledger and enforce gated topics
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LEDGER_PATH: .rep-data/rep.json
+        run: npx tsx .github/scripts/rep-action.ts
+
+      - name: Commit and push ledger
+        run: |
+          cd .rep-data
+          git add rep.json
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "chore: update rep ledger" || { echo "ledger unchanged"; exit 0; }
+          git push origin rep-data
