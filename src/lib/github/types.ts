@@ -40,6 +40,8 @@ export interface DiscussionListItem {
 	author: Actor | null;
 	category: Pick<Category, 'id' | 'name' | 'slug' | 'emojiHTML'>;
 	comments: { totalCount: number };
+	/** Present only while filtering API results to the forum repo */
+	repository?: { nameWithOwner: string };
 }
 
 export interface DiscussionPage {
@@ -86,6 +88,36 @@ export interface Discussion {
 }
 
 export type RepositoryPermission = 'ADMIN' | 'MAINTAIN' | 'WRITE' | 'TRIAGE' | 'READ';
+
+/** A comment a user left somewhere on the forum, for their profile page */
+export interface ProfileComment {
+	id: string;
+	bodyText: string;
+	createdAt: string;
+	/** Fetched to re-check authorship — the API's user scoping is unreliable */
+	author: { login: string } | null;
+	discussion: {
+		number: number;
+		title: string;
+		/** Present only while filtering API results to the forum repo */
+		repository?: { nameWithOwner: string };
+	};
+}
+
+export interface UserProfile {
+	login: string;
+	name: string | null;
+	avatarUrl: string;
+	url: string;
+	bio: string | null;
+	createdAt: string;
+	/** Raw markdown of the user's github.com profile README (login/login repo), if public */
+	readme: string | null;
+	/** Discussions the user authored in the forum repository */
+	discussions: DiscussionPage;
+	/** Comments the user posted in the forum repository (most recent first) */
+	comments: { totalCount: number; nodes: ProfileComment[] };
+}
 
 export interface Viewer {
 	login: string;

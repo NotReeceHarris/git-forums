@@ -223,9 +223,7 @@
 						class="size-6 rounded-full border border-fd-border"
 					/>
 					<a
-						href={discussion.author.url}
-						target="_blank"
-						rel="noreferrer"
+						href={resolve('/u/[login]', { login: discussion.author.login })}
 						class="font-medium text-fd-foreground hover:underline"
 					>
 						{discussion.author.login}

@@ -10,6 +10,7 @@ import type {
 	Reply,
 	RepositoryPermission,
 	SearchResult,
+	UserProfile,
 	Viewer
 } from './types';
 
@@ -22,7 +23,18 @@ class GitHubError extends Error {
 	}
 }
 
-async function gql<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
+async function gql<T>(
+	query: string,
+	variables: Record<string, unknown> = {},
+	opts: {
+		/**
+		 * Return the partial data when the only errors are NOT_FOUND — used for
+		 * queries with optional parts (e.g. a profile README repo that may not
+		 * exist), where GitHub nulls the missing field but still reports it.
+		 */
+		tolerateNotFound?: boolean;
+	} = {}
+): Promise<T> {
 	if (!auth.token) {
 		throw new GitHubError('Sign in to browse the forum — GitHub Discussions requires an API token.', 401);
 	}
@@ -40,7 +52,14 @@ async function gql<T>(query: string, variables: Record<string, unknown> = {}): P
 	}
 	if (!res.ok) throw new GitHubError(`GitHub API error (${res.status}).`, res.status);
 	const json = await res.json();
-	if (json.errors?.length) throw new GitHubError(json.errors[0].message);
+	if (json.errors?.length) {
+		const onlyNotFound = json.errors.every(
+			(e: { type?: string }) => e.type === 'NOT_FOUND'
+		);
+		if (!(opts.tolerateNotFound && onlyNotFound && json.data)) {
+			throw new GitHubError(json.errors[0].message);
+		}
+	}
 	return json.data as T;
 }
 
@@ -248,6 +267,141 @@ export async function searchDiscussions(term: string): Promise<SearchResult> {
 	return data.search;
 }
 
+/* -------------- */
+/* User profiles  */
+/* -------------- */
+
+const PROFILE_COMMENT = `id bodyText createdAt author { login } discussion { number title repository { nameWithOwner } }`;
+// The `repositoryId` scoping on repositoryDiscussions/-Comments is not
+// reliably honoured by GitHub's API, and repositoryDiscussionComments has been
+// observed returning comments *other users* wrote. Every node therefore also
+// carries its repository and author so results are re-checked client-side.
+const PROFILE_DISCUSSIONS_PAGE = `
+	totalCount
+	pageInfo { endCursor hasNextPage }
+	nodes { ${LIST_ITEM} repository { nameWithOwner } }
+`;
+
+function forumRepoName(): string {
+	return `${forumConfig.repo.owner}/${forumConfig.repo.name}`;
+}
+
+/**
+ * Keep only nodes that are in the forum repository AND authored by the profile
+ * user. When nothing was dropped the server-side scoping worked and its
+ * totalCount is trusted; otherwise the count degrades to the number of
+ * matching nodes actually fetched.
+ */
+function ownProfileNodes<
+	T extends { author: { login: string } | null; repository?: { nameWithOwner: string } }
+>(login: string, page: { totalCount: number; nodes: T[] }): { totalCount: number; nodes: T[] } {
+	const user = login.toLowerCase();
+	const nodes = page.nodes.filter(
+		(n) =>
+			n.author?.login.toLowerCase() === user &&
+			n.repository?.nameWithOwner === forumRepoName()
+	);
+	return {
+		totalCount: nodes.length === page.nodes.length ? page.totalCount : nodes.length,
+		nodes
+	};
+}
+
+/**
+ * Everything the profile page needs in one round-trip: the user's identity,
+ * their github.com profile README (the README.md of their `login/login` repo,
+ * when that repo is public), and their posts and comments scoped to the forum
+ * repository.
+ */
+export async function getUserProfile(login: string): Promise<UserProfile> {
+	const repositoryId = await getRepoId();
+	const data = await gql<{
+		user: {
+			login: string;
+			name: string | null;
+			avatarUrl: string;
+			url: string;
+			bio: string | null;
+			createdAt: string;
+			repository: { object: { text: string } | null } | null;
+			repositoryDiscussions: DiscussionPage;
+			repositoryDiscussionComments: {
+				totalCount: number;
+				nodes: UserProfile['comments']['nodes'];
+			};
+		} | null;
+	}>(
+		`query ($login: String!, $repositoryId: ID!, $first: Int!) {
+			user(login: $login) {
+				login name avatarUrl url bio createdAt
+				repository(name: $login) {
+					object(expression: "HEAD:README.md") { ... on Blob { text } }
+				}
+				repositoryDiscussions(
+					first: $first, repositoryId: $repositoryId,
+					orderBy: { field: CREATED_AT, direction: DESC }
+				) {
+					${PROFILE_DISCUSSIONS_PAGE}
+				}
+				repositoryDiscussionComments(first: 100, repositoryId: $repositoryId) {
+					totalCount
+					nodes { ${PROFILE_COMMENT} }
+				}
+			}
+		}`,
+		{ login, repositoryId, first: forumConfig.content.pageSize },
+		// the login/login profile-README repo often doesn't exist — GitHub
+		// reports it as a NOT_FOUND error alongside the (complete) profile data
+		{ tolerateNotFound: true }
+	);
+	if (!data.user) throw new GitHubError('User not found.', 404);
+	const discussions = ownProfileNodes(data.user.login, data.user.repositoryDiscussions);
+	// comments carry their repository on the parent discussion — lift it so
+	// they go through the same filter as posts
+	const comments = ownProfileNodes(data.user.login, {
+		totalCount: data.user.repositoryDiscussionComments.totalCount,
+		nodes: data.user.repositoryDiscussionComments.nodes.map((c) => ({
+			...c,
+			repository: c.discussion.repository
+		}))
+	});
+	return {
+		login: data.user.login,
+		name: data.user.name,
+		avatarUrl: data.user.avatarUrl,
+		url: data.user.url,
+		bio: data.user.bio,
+		createdAt: data.user.createdAt,
+		readme: data.user.repository?.object?.text ?? null,
+		discussions: { ...data.user.repositoryDiscussions, ...discussions },
+		comments
+	};
+}
+
+/** Next page of a user's forum posts (profile page "Load more"). */
+export async function listUserDiscussions(
+	login: string,
+	after: string | null
+): Promise<DiscussionPage> {
+	const repositoryId = await getRepoId();
+	const data = await gql<{ user: { repositoryDiscussions: DiscussionPage } | null }>(
+		`query ($login: String!, $repositoryId: ID!, $first: Int!, $after: String) {
+			user(login: $login) {
+				repositoryDiscussions(
+					first: $first, after: $after, repositoryId: $repositoryId,
+					orderBy: { field: CREATED_AT, direction: DESC }
+				) {
+					${PROFILE_DISCUSSIONS_PAGE}
+				}
+			}
+		}`,
+		{ login, repositoryId, first: forumConfig.content.pageSize, after }
+	);
+	if (!data.user) throw new GitHubError('User not found.', 404);
+	const page = data.user.repositoryDiscussions;
+	return { ...page, ...ownProfileNodes(login, page) };
+}
+
 /* --------- */
 /* Mutations */
 /* --------- */
@@ -353,7 +507,16 @@ export async function toggleUpvote(subjectId: string, on: boolean) {
 /* Markdown preview */
 /* ---------------- */
 
-export async function renderMarkdown(text: string): Promise<string> {
+/**
+ * Render markdown via the GitHub API. `gfm` mode (the default) matches how
+ * GitHub renders comments — single newlines become hard breaks. Documents like
+ * profile READMEs must use `markdown` mode, which flows single newlines like
+ * github.com's file renderer does.
+ */
+export async function renderMarkdown(
+	text: string,
+	opts: { context?: string; mode?: 'gfm' | 'markdown' } = {}
+): Promise<string> {
 	const res = await fetch('https://api.github.com/markdown', {
 		method: 'POST',
 		headers: {
@@ -362,8 +525,8 @@ export async function renderMarkdown(text: string): Promise<string> {
 		},
 		body: JSON.stringify({
 			text,
-			mode: 'gfm',
-			context: `${forumConfig.repo.owner}/${forumConfig.repo.name}`
+			mode: opts.mode ?? 'gfm',
+			context: opts.context ?? `${forumConfig.repo.owner}/${forumConfig.repo.name}`
 		})
 	});
 	if (!res.ok) throw new GitHubError('Markdown preview failed.', res.status);

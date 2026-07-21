@@ -33,18 +33,18 @@ describe('read/write round-trip', () => {
 		mockConfig.cache.enabled = false;
 		cache.writeCache('k', 1);
 		expect(localStorage.length).toBe(0);
-		localStorage.setItem('dk:cache:v1:anon:k', JSON.stringify({ t: Date.now(), data: 1 }));
+		localStorage.setItem('dk:cache:v3:anon:k', JSON.stringify({ t: Date.now(), data: 1 }));
 		expect(cache.readCache('k')).toBeNull();
 	});
 
 	it('drops corrupt entries', () => {
-		localStorage.setItem('dk:cache:v1:anon:bad', 'not json');
+		localStorage.setItem('dk:cache:v3:anon:bad', 'not json');
 		expect(cache.readCache('bad')).toBeNull();
-		expect(localStorage.getItem('dk:cache:v1:anon:bad')).toBeNull();
+		expect(localStorage.getItem('dk:cache:v3:anon:bad')).toBeNull();
 	});
 
 	it('drops entries without a numeric timestamp', () => {
-		localStorage.setItem('dk:cache:v1:anon:odd', JSON.stringify({ data: 1 }));
+		localStorage.setItem('dk:cache:v3:anon:odd', JSON.stringify({ data: 1 }));
 		expect(cache.readCache('odd')).toBeNull();
 	});
 
@@ -53,7 +53,7 @@ describe('read/write round-trip', () => {
 		cache.writeCache('k', 'v');
 		vi.advanceTimersByTime(3601 * 1000);
 		expect(cache.readCache('k')).toBeNull();
-		expect(localStorage.getItem('dk:cache:v1:anon:k')).toBeNull();
+		expect(localStorage.getItem('dk:cache:v3:anon:k')).toBeNull();
 	});
 });
 
@@ -76,8 +76,8 @@ describe('quota handling', () => {
 		cache.writeCache('old', 1);
 		vi.advanceTimersByTime(1000);
 		cache.writeCache('new', 2);
-		localStorage.setItem('dk:cache:v1:anon:corrupt', 'junk'); // treated as oldest
-		localStorage.setItem('dk:cache:v1:anon:no-t', JSON.stringify({ data: 1 })); // also oldest
+		localStorage.setItem('dk:cache:v3:anon:corrupt', 'junk'); // treated as oldest
+		localStorage.setItem('dk:cache:v3:anon:no-t', JSON.stringify({ data: 1 })); // also oldest
 		localStorage.setItem('unrelated', 'kept');
 
 		const original = Storage.prototype.setItem;
@@ -91,8 +91,8 @@ describe('quota handling', () => {
 		cache.writeCache('k', 3);
 		expect(cache.readCache('k')).toBe(3);
 		// oldest half evicted (the two unreadable zero-timestamp entries)
-		expect(localStorage.getItem('dk:cache:v1:anon:corrupt')).toBeNull();
-		expect(localStorage.getItem('dk:cache:v1:anon:no-t')).toBeNull();
+		expect(localStorage.getItem('dk:cache:v3:anon:corrupt')).toBeNull();
+		expect(localStorage.getItem('dk:cache:v3:anon:no-t')).toBeNull();
 		expect(cache.readCache('old')).toBe(1);
 		expect(cache.readCache('new')).toBe(2);
 		expect(localStorage.getItem('unrelated')).toBe('kept');

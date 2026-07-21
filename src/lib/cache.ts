@@ -16,7 +16,7 @@
 import { forumConfig } from './config';
 
 /** Bump when the shape of cached GraphQL data changes */
-const VERSION = 1;
+const VERSION = 3;
 const BASE = 'dk:cache:';
 const PREFIX = `${BASE}v${VERSION}:`;
 
