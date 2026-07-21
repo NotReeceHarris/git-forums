@@ -10,7 +10,7 @@
 	import { isArticle, listDiscussions } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { DiscussionListItem, PageInfo } from '$lib/github/types';
-	import { canPostIn, repRequirement, ui } from '$lib/ui.svelte';
+	import { archiveMode, canPostIn, repRequirement, ui } from '$lib/ui.svelte';
 
 	const category = $derived(ui.categories.find((c) => c.slug === page.params.slug));
 
@@ -46,6 +46,14 @@
 		error = null;
 		discussions = [];
 		filter = 'all';
+		// read-only archive mode: the whole feed is already in the archived
+		// home index — filter it locally instead of calling the API
+		if (archiveMode()) {
+			discussions = (ui.home?.nodes ?? []).filter((d) => d.category.id === categoryId);
+			pageInfo = null;
+			loading = false;
+			return;
+		}
 		try {
 			await swr(`discussions:cat:${categoryId}`, () => listDiscussions({ categoryId }), (result) => {
 				discussions = result.nodes;
@@ -84,7 +92,7 @@
 
 {#if auth.loading}
 	<Loading />
-{:else if !auth.signedIn}
+{:else if !auth.signedIn && !(archiveMode() && ui.bootedFromArchive)}
 	<SignInPrompt />
 {:else if !ui.categoriesLoaded}
 	<Loading />

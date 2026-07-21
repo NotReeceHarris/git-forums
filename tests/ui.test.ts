@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockConfig, getOverview, mockAuth, fetchLedger } = vi.hoisted(() => ({
+const { mockConfig, getOverview, mockAuth, fetchLedger, fetchArchiveMeta, fetchArchiveIndex } =
+	vi.hoisted(() => ({
 	mockConfig: {
 		admins: { logins: ['root'], badgeLabel: 'ADMIN' },
 		badges: {
@@ -18,18 +19,22 @@ const { mockConfig, getOverview, mockAuth, fetchLedger } = vi.hoisted(() => ({
 			onViolation: 'move',
 			fallbackTopic: 'general',
 			exemptMaintainers: true,
-			dataBranch: 'rep-data'
-		}
+			dataBranch: 'data'
+		},
+		archive: { enabled: false, dataBranch: 'data' }
 	},
 	getOverview: vi.fn(),
-	mockAuth: { viewer: null as { login: string } | null },
-	fetchLedger: vi.fn()
+	mockAuth: { viewer: null as { login: string } | null, signedIn: true },
+	fetchLedger: vi.fn(),
+	fetchArchiveMeta: vi.fn(),
+	fetchArchiveIndex: vi.fn()
 }));
 
 vi.mock('$lib/config', () => ({ forumConfig: mockConfig }));
 vi.mock('$lib/github/api', () => ({ getOverview }));
 vi.mock('$lib/github/auth.svelte', () => ({ auth: mockAuth }));
 vi.mock('$lib/rep/ledger', () => ({ fetchLedger }));
+vi.mock('$lib/archive/client', () => ({ fetchArchiveMeta, fetchArchiveIndex }));
 // pass-through swr: run the fetcher and apply the fresh result
 vi.mock('$lib/cache', () => ({
 	swr: async <T,>(
@@ -58,8 +63,14 @@ beforeEach(async () => {
 	mockConfig.rep.enabled = false;
 	mockConfig.rep.topics = {};
 	mockConfig.rep.exemptMaintainers = true;
+	mockConfig.archive.enabled = false;
+	mockConfig.content.topics.include = [];
+	mockConfig.content.topics.exclude = [];
 	mockAuth.viewer = { login: 'guest' };
+	mockAuth.signedIn = true;
 	fetchLedger.mockReset().mockResolvedValue(null);
+	fetchArchiveMeta.mockReset().mockResolvedValue(null);
+	fetchArchiveIndex.mockReset().mockResolvedValue(null);
 	localStorage.clear();
 	document.documentElement.className = '';
 	mod = await import('$lib/ui.svelte');
@@ -121,6 +132,90 @@ describe('permissions', () => {
 		expect(mod.postableCategories().map((c) => c.slug)).toEqual(['general']);
 		mod.ui.viewerPermission = 'WRITE';
 		expect(mod.postableCategories().map((c) => c.slug)).toEqual(['general', 'announcements']);
+	});
+});
+
+describe('archive mode', () => {
+	const meta = {
+		archivedAt: 'T',
+		categories: [
+			{ id: '1', slug: 'general' },
+			{ id: '9', slug: 'hidden' }
+		],
+		pinned: [
+			{ id: 'p1', category: { slug: 'general' } },
+			{ id: 'p2', category: { slug: 'hidden' } }
+		]
+	};
+	const index = {
+		archivedAt: 'T',
+		discussions: [
+			{ id: 'a1', category: { slug: 'general' } },
+			{ id: 'a2', category: { slug: 'hidden' } }
+		]
+	};
+
+	describe('archiveMode', () => {
+		it('is on only when the archive is enabled and the visitor is signed out', () => {
+			expect(mod.archiveMode()).toBe(false);
+			mockConfig.archive.enabled = true;
+			expect(mod.archiveMode()).toBe(false);
+			mockAuth.signedIn = false;
+			expect(mod.archiveMode()).toBe(true);
+			mockConfig.archive.enabled = false;
+			expect(mod.archiveMode()).toBe(false);
+		});
+	});
+
+	describe('loadOverview from the archive', () => {
+		beforeEach(() => {
+			mockConfig.archive.enabled = true;
+			mockAuth.signedIn = false;
+		});
+
+		it('boots categories, feed, and pins from the snapshot with topic filtering', async () => {
+			mockConfig.content.topics.exclude = ['hidden'];
+			fetchArchiveMeta.mockResolvedValue(meta);
+			fetchArchiveIndex.mockResolvedValue(index);
+			await mod.loadOverview();
+			expect(getOverview).not.toHaveBeenCalled();
+			expect(mod.ui.categories.map((c) => c.slug)).toEqual(['general']);
+			expect(mod.ui.home?.nodes.map((d) => d.id)).toEqual(['a1']);
+			expect(mod.ui.home?.pageInfo.hasNextPage).toBe(false);
+			expect(mod.ui.pinned.map((p) => p.id)).toEqual(['p1']);
+			expect(mod.ui.viewerPermission).toBe('READ');
+			expect(mod.ui.categoriesLoaded).toBe(true);
+			expect(mod.ui.bootedFromArchive).toBe(true);
+		});
+
+		it('applies include-list topic filtering', async () => {
+			mockConfig.content.topics.include = ['hidden'];
+			fetchArchiveMeta.mockResolvedValue(meta);
+			fetchArchiveIndex.mockResolvedValue(index);
+			await mod.loadOverview();
+			expect(mod.ui.categories.map((c) => c.slug)).toEqual(['hidden']);
+			expect(mod.ui.home?.nodes.map((d) => d.id)).toEqual(['a2']);
+		});
+
+		it('leaves the sign-in prompt up when no archive exists yet', async () => {
+			await mod.loadOverview();
+			expect(mod.ui.categoriesLoaded).toBe(false);
+			expect(mod.ui.bootedFromArchive).toBe(false);
+		});
+
+		it('re-boots from the live API after signing in', async () => {
+			fetchArchiveMeta.mockResolvedValue(meta);
+			fetchArchiveIndex.mockResolvedValue(index);
+			await mod.loadOverview();
+			expect(mod.ui.bootedFromArchive).toBe(true);
+			mockAuth.signedIn = true;
+			await mod.loadOverview();
+			// archive boot doesn't count as data worth revalidating "freshly"
+			expect(getOverview).toHaveBeenCalledWith({ fresh: false });
+			expect(mod.ui.bootedFromArchive).toBe(false);
+			expect(mod.ui.viewerPermission).toBe('READ');
+			expect(mod.ui.categories).toEqual(cats);
+		});
 	});
 });
 

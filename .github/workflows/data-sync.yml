@@ -1,0 +1,75 @@
+name: Data sync
+
+# Maintains the machine-written `data` branch: the cold-store archive
+# (anonymous read-only mode) and the per-profile rep files, from one scan.
+#
+# The branch is a SNAPSHOT: every run rewrites the whole tree and force-pushes
+# a single fresh commit. Derived data is deterministic and recomputable, so
+# history has no value — the branch stays at one commit forever, stale files
+# (deleted posts, renamed users) vanish automatically, and the force-push
+# creates the branch on first run with zero manual setup.
+on:
+  discussion:
+    types: [created, edited, category_changed, answered, unanswered, deleted]
+  discussion_comment:
+    types: [created, edited, deleted]
+  schedule:
+    # periodic full sync — reactions/upvotes have no webhook, so this is the
+    # only way they reach the archive; also self-heals any missed events
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  discussions: write
+
+# Serialize runs so pushes never race. cancel-in-progress stays false: the
+# in-flight run finishes, at most one run queues behind it, and the final
+# queued run recomputes everything from scratch.
+concurrency:
+  group: data-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build data snapshot (archive + rep profiles + enforcement)
+        id: sync
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUT_DIR: .data-out
+        run: npx tsx .github/scripts/data-sync.ts
+
+      - name: Publish snapshot to the data branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.sync.outputs.branch }}
+        run: |
+          if [ ! -d .data-out ] || [ -z "$BRANCH" ]; then
+            echo "nothing to publish"
+            exit 0
+          fi
+          cd .data-out
+          git init -q
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "chore: data snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # force-push the single snapshot commit; creates the branch if absent
+          git push -q --force \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "HEAD:refs/heads/${BRANCH}"
+          echo "published snapshot to ${BRANCH}"

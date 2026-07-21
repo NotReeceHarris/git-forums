@@ -84,6 +84,13 @@ export default defineForumConfig({
 		fallbackTopic: 'general'                   // where moved posts land
 	},
 
+	// Cold-store archive: the data-sync workflow snapshots the forum to the
+	// `data` branch, and signed-out visitors browse it read-only instead of
+	// hitting the (auth-only) GitHub API. Public repositories only.
+	archive: {
+		enabled: true
+	},
+
 	// Override any CSS token per scheme, e.g. a blue primary:
 	theme: {
 		light: {

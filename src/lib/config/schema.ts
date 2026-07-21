@@ -145,7 +145,20 @@ export interface ForumConfig {
 		fallbackTopic: string;
 		/** Users with push access (and config admins) bypass rep gates */
 		exemptMaintainers: boolean;
-		/** Branch holding the Actions-maintained rep.json ledger */
+		/** Data branch holding the Actions-maintained `profiles/` rep files */
+		dataBranch: string;
+	};
+	/**
+	 * Optional cold-store archive: the data-sync workflow snapshots every
+	 * discussion (rendered HTML + comments) to the data branch, and signed-out
+	 * visitors browse that snapshot read-only instead of hitting the GitHub
+	 * API (which requires auth). Public repositories only — the raw file URLs
+	 * the SPA reads are not accessible anonymously on private repos.
+	 */
+	archive: {
+		/** Master switch for the archive and the anonymous read-only mode */
+		enabled: boolean;
+		/** Branch holding the archived `posts/` and `meta.json` (orphan, machine-written) */
 		dataBranch: string;
 	};
 	cache: {
@@ -222,7 +235,11 @@ export const defaultConfig: ForumConfig = {
 		onViolation: 'move',
 		fallbackTopic: '',
 		exemptMaintainers: true,
-		dataBranch: 'rep-data'
+		dataBranch: 'data'
+	},
+	archive: {
+		enabled: false,
+		dataBranch: 'data'
 	},
 	cache: {
 		enabled: true,

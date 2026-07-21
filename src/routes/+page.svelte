@@ -8,7 +8,7 @@
 	import { listDiscussions } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { DiscussionListItem, PageInfo } from '$lib/github/types';
-	import { loadOverview, ui } from '$lib/ui.svelte';
+	import { archiveMode, loadOverview, ui } from '$lib/ui.svelte';
 
 	// the first page comes from the shared bootstrap query (ui.home);
 	// "load more" pages accumulate locally
@@ -27,7 +27,7 @@
 
 	let started = false;
 	$effect(() => {
-		if (auth.signedIn && !started) {
+		if ((auth.signedIn || (!auth.loading && archiveMode())) && !started) {
 			started = true;
 			// revalidates the shared feed when revisiting the home page
 			loadOverview().catch((err) => {
@@ -55,7 +55,7 @@
 
 {#if auth.loading}
 	<Loading />
-{:else if !auth.signedIn}
+{:else if !auth.signedIn && !(archiveMode() && ui.bootedFromArchive)}
 	<div class="mx-auto max-w-2xl pt-10">
 		<h1 class="mb-2 text-center text-3xl font-bold tracking-tight">{forumConfig.site.name}</h1>
 		<p class="mb-8 text-center text-fd-muted-foreground">{forumConfig.site.description}</p>

@@ -6,7 +6,7 @@
 	import SignInDialog from '$lib/components/SignInDialog.svelte';
 	import { auth } from '$lib/github/auth.svelte';
 	import { configIncomplete, forumConfig, themeCss } from '$lib/config';
-	import { loadOverview, loadRep, ui } from '$lib/ui.svelte';
+	import { archiveMode, loadOverview, loadRep, ui } from '$lib/ui.svelte';
 
 	let { children } = $props();
 
@@ -16,9 +16,15 @@
 	});
 
 	// forum data needs an authenticated GraphQL call; one combined query
-	// bootstraps categories, permission, and the home feed
+	// bootstraps categories, permission, and the home feed. Signed-out
+	// visitors boot from the read-only archive instead (when enabled), and a
+	// later sign-in re-boots against the live API.
 	$effect(() => {
-		if (auth.signedIn && !ui.categoriesLoaded) loadOverview();
+		if (auth.signedIn && (!ui.categoriesLoaded || ui.bootedFromArchive)) {
+			loadOverview();
+		} else if (!auth.loading && archiveMode() && !ui.categoriesLoaded) {
+			loadOverview();
+		}
 	});
 
 	// rep ledger is public raw content — load as soon as the app boots
@@ -48,6 +54,21 @@
 {:else}
 	<Header />
 	<SignInDialog />
+
+	{#if archiveMode() && ui.bootedFromArchive}
+		<div class="border-b border-fd-border bg-fd-muted/50">
+			<div class="mx-auto flex max-w-[1400px] flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 text-center text-xs text-fd-muted-foreground">
+				<span>Read-only snapshot — sign in to post, comment, and react.</span>
+				<button
+					type="button"
+					onclick={() => (ui.signInOpen = true)}
+					class="font-medium text-fd-link hover:underline"
+				>
+					Sign in
+				</button>
+			</div>
+		</div>
+	{/if}
 
 	<div class="mx-auto flex w-full max-w-[1400px] gap-8 px-4">
 		{#if auth.signedIn && ui.categories.length > 0}

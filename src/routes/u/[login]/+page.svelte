@@ -7,9 +7,10 @@
 	import SignInPrompt from '$lib/components/SignInPrompt.svelte';
 	import UserBadges from '$lib/components/UserBadges.svelte';
 	import { forumConfig } from '$lib/config';
+	import { fetchProfileRep } from '$lib/archive/client';
 	import { getUserProfile, listUserDiscussions, renderMarkdown } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
-	import { repFor } from '$lib/ui.svelte';
+	import { archiveMode, repFor, ui } from '$lib/ui.svelte';
 	import type { UserProfile } from '$lib/github/types';
 	import { excerpt, formatDate, timeAgo } from '$lib/utils';
 
@@ -26,7 +27,11 @@
 
 	let loadedFor: string | null = null;
 	$effect(() => {
-		if (auth.signedIn && login && loadedFor !== login) {
+		if (
+			(auth.signedIn || (archiveMode() && ui.bootedFromArchive)) &&
+			login &&
+			loadedFor !== login
+		) {
 			loadedFor = login;
 			load(login);
 		}
@@ -38,6 +43,36 @@
 		profile = null;
 		readmeHTML = null;
 		tab = 'posts';
+		// read-only archive mode: assemble a lightweight profile from the
+		// per-user rep file and the archived post index (no API available)
+		if (archiveMode()) {
+			const repData = await fetchProfileRep(user);
+			const posts = (ui.home?.nodes ?? []).filter(
+				(d) => d.author?.login.toLowerCase() === user.toLowerCase()
+			);
+			if (!repData && posts.length === 0) {
+				error = 'This user has no archived activity — sign in to view the full profile.';
+				loading = false;
+				return;
+			}
+			profile = {
+				login: posts[0]?.author?.login ?? user,
+				name: null,
+				avatarUrl: posts[0]?.author?.avatarUrl ?? `https://github.com/${user}.png`,
+				url: `https://github.com/${user}`,
+				bio: null,
+				createdAt: '',
+				readme: null,
+				discussions: {
+					totalCount: posts.length,
+					pageInfo: { endCursor: null, hasNextPage: false },
+					nodes: posts
+				},
+				comments: { totalCount: repData?.breakdown.comment ?? 0, nodes: [] }
+			};
+			loading = false;
+			return;
+		}
 		try {
 			await swr(`profile:${user}`, () => getUserProfile(user), (fresh) => {
 				profile = fresh;
@@ -98,7 +133,7 @@
 
 {#if auth.loading}
 	<Loading />
-{:else if !auth.signedIn}
+{:else if !auth.signedIn && !(archiveMode() && ui.bootedFromArchive)}
 	<SignInPrompt />
 {:else if loading}
 	<Loading />
@@ -142,9 +177,11 @@
 					<strong class="font-semibold text-fd-foreground">{profile.comments.totalCount}</strong>
 					{profile.comments.totalCount === 1 ? 'comment' : 'comments'}
 				</span>
-				<span title={formatDate(profile.createdAt)}>
-					Joined GitHub {formatDate(profile.createdAt)}
-				</span>
+				{#if profile.createdAt}
+					<span title={formatDate(profile.createdAt)}>
+						Joined GitHub {formatDate(profile.createdAt)}
+					</span>
+				{/if}
 				<a
 					href={profile.url}
 					target="_blank"
@@ -206,7 +243,14 @@
 			{/if}
 		{/if}
 	{:else if tab === 'comments'}
-		{#if profile.comments.nodes.length === 0}
+		{#if profile.comments.nodes.length === 0 && profile.comments.totalCount > 0}
+			<div class="rounded-2xl border border-dashed border-fd-border py-16 text-center">
+				<p class="font-medium">{profile.comments.totalCount} comments</p>
+				<p class="mt-1 text-sm text-fd-muted-foreground">
+					Comment details aren't part of the read-only snapshot — sign in to browse them.
+				</p>
+			</div>
+		{:else if profile.comments.nodes.length === 0}
 			<div class="rounded-2xl border border-dashed border-fd-border py-16 text-center">
 				<p class="font-medium">No comments yet</p>
 				<p class="mt-1 text-sm text-fd-muted-foreground">

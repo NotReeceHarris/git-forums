@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { forumConfig } from '$lib/config';
 	import { auth } from '$lib/github/auth.svelte';
-	import { ui } from '$lib/ui.svelte';
+	import { archiveMode, ui } from '$lib/ui.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
 
 	let query = $state('');
@@ -46,7 +46,7 @@
 			</nav>
 		{/if}
 
-		{#if forumConfig.features.search}
+		{#if forumConfig.features.search && !archiveMode()}
 		<form onsubmit={search} class="ml-auto hidden max-w-xs flex-1 sm:block">
 			<div class="relative">
 				<svg

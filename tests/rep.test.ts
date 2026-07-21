@@ -152,7 +152,7 @@ describe('fetchLedger', () => {
 	const { mockConfig } = vi.hoisted(() => ({
 		mockConfig: {
 			repo: { owner: 'o', name: 'r' },
-			rep: { enabled: true, dataBranch: 'rep-data' }
+			rep: { enabled: true, dataBranch: 'data' }
 		}
 	}));
 	vi.mock('$lib/config', () => ({ forumConfig: mockConfig }));
@@ -167,12 +167,12 @@ describe('fetchLedger', () => {
 		({ fetchLedger } = await import('$lib/rep/ledger'));
 	});
 
-	it('fetches the ledger from the data branch raw URL', async () => {
+	it('fetches the rep index from the data branch raw URL', async () => {
 		const ledger = { version: 1, updatedAt: 'T', users: { alice: 5 } };
 		fetchMock.mockResolvedValue({ ok: true, json: async () => ledger });
 		expect(await fetchLedger()).toEqual(ledger);
 		expect(fetchMock).toHaveBeenCalledWith(
-			'https://raw.githubusercontent.com/o/r/rep-data/rep.json',
+			'https://raw.githubusercontent.com/o/r/data/profiles/index.json',
 			{ cache: 'no-cache' }
 		);
 	});

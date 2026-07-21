@@ -15,7 +15,7 @@ A fully featured forum site powered entirely by **GitHub Discussions** — no ba
 - **Pinned posts**: discussions pinned on github.com (Discussions → ⋯ → *Pin discussion*, maintainers only, up to 4) appear in a dedicated **Pinned** section above the list on the home page and on their topic's page. The GitHub API only exposes *reading* pins, so pinning/unpinning itself happens on github.com.
 - Post bodies are rendered by GitHub itself (`bodyHTML`), so you get GitHub-flavoured markdown, syntax highlighting markup, and sanitisation for free.
 
-> **Why is sign-in required to read?** GitHub Discussions is only exposed through the GraphQL API, which always requires authentication. There is no server here to hold a shared token, so each visitor authenticates with their own GitHub account.
+> **Why is sign-in required to read?** GitHub Discussions is only exposed through the GraphQL API, which always requires authentication. There is no server here to hold a shared token, so each visitor authenticates with their own GitHub account. Enable the [read-only archive](#read-only-archive-anonymous-mode) to let signed-out visitors browse a snapshot of the forum anyway.
 
 ## Use it for your own forum
 
@@ -39,6 +39,7 @@ Everything lives in [`forum.config.ts`](forum.config.ts). Every option is option
 | `content` | `pageSize`, `sort` (`CREATED_AT`/`UPDATED_AT`), `listExcerpts` (disable together with articles to skip fetching post bodies in lists), `articles.enabled` + `articles.marker`, `topics.include`/`topics.exclude` (category slugs), `topics.restricted` (announcement-format slugs where only maintainers can post — the UI hides posting there unless the signed-in user has write access) |
 | `features` | `search`, `reactions`, `upvotes` — toggle whole features off |
 | `rep` | Optional reputation system (off by default): `enabled`, `gains` (rep per `post`/`comment`/`answerAccepted`), `dailyCaps` (anti-farming, per UTC day, 0 = uncapped), `topics` (slug → min rep to post), `onViolation` (`move`/`lock`/`delete`), `fallbackTopic`, `exemptMaintainers`, `dataBranch` — see [Reputation system](#reputation-system) |
+| `archive` | Optional cold-store archive + anonymous read-only mode (off by default, public repos only): `enabled`, `dataBranch` — see [Read-only archive](#read-only-archive-anonymous-mode) |
 | `cache` | `enabled` (default `true`), `ttlSeconds` (default `3600`) — stale-while-revalidate caching of GraphQL responses in `localStorage`: pages paint instantly from the last known data while a background request refreshes them; entries are versioned, scoped per signed-in user, invalidated on posting, and wiped on sign-out |
 | `theme` | Per-scheme CSS token overrides (`light`/`dark`): `background`, `foreground`, `muted`, `mutedForeground`, `card`, `cardForeground`, `border`, `primary`, `primaryForeground`, `accent`, `accentForeground`, `ring`, `link` |
 
@@ -74,11 +75,42 @@ rep: {
 
 How it works:
 
-- **The ledger** (`rep.json`) lives on a dedicated `rep-data` branch, maintained exclusively by the [`rep.yml`](.github/workflows/rep.yml) workflow. On every discussion/comment event it **recomputes rep from scratch** by scanning all forum activity — deterministic, idempotent, and self-healing (deleted content simply stops counting). The SPA reads the ledger from the branch's raw URL to show rep badges and gate the topic picker.
+- **Rep data lives on the machine-written [`data` branch](#the-data-branch)** as `profiles/index.json` (compact login → rep map, one fetch for list badges) plus `profiles/<login>/rep.json` (rep + action breakdown), maintained exclusively by the [`data-sync.yml`](.github/workflows/data-sync.yml) workflow. On every discussion/comment event it **recomputes rep from scratch** by scanning all forum activity — deterministic, idempotent, and self-healing (deleted content simply stops counting).
 - **Earning**: posts, comments, and accepted answers award rep. Daily caps (per UTC day, per action type) blunt farming; accepted answers are never capped since someone else grants them.
 - **Enforcement is reactive.** GitHub has no pre-post hook, so a low-rep user *can* momentarily post into a gated topic via github.com — the workflow then sweeps recent posts in gated topics and moves (default), locks, or deletes violations, leaving an explanatory comment. A post's own rep gain doesn't count toward clearing its own gate.
 - **Exemptions**: repository maintainers (unless `exemptMaintainers: false`) and configured `admins.logins` bypass rep gates.
-- **Caveats**: the raw-URL ledger is CDN-cached (~5 min lag); the enforcement sweep only looks at the last 48 hours, so if a maintainer moves a violating post *back* into a gated topic within that window the workflow will move it out again.
+- **Caveats**: the raw-URL rep data is CDN-cached (~5 min lag); the enforcement sweep only looks at the last 48 hours, so if a maintainer moves a violating post *back* into a gated topic within that window the workflow will move it out again.
+
+## Read-only archive (anonymous mode)
+
+Normally signed-out visitors can read nothing (the GitHub API refuses anonymous calls). With the archive enabled, the data-sync workflow snapshots every discussion — GitHub-rendered HTML, comments, replies, reaction counts — and **signed-out visitors browse that snapshot read-only**: home, topics, threads, and lightweight profiles all work, with a banner and sign-in prompts on every interactive control.
+
+```ts
+archive: { enabled: true }
+```
+
+- **Public repositories only** — the SPA reads the snapshot from `raw.githubusercontent.com`, which requires auth on private repos.
+- **Freshness**: event-driven updates land within a minute or two (workflow runtime + ~5 min CDN cache). Reactions/upvotes have no webhook, so they refresh on the 6-hourly scheduled sync.
+- **Degradations while signed out**: no posting, reactions, or search; brand-new posts show a "not yet archived" notice; profile pages show archived posts and rep but not comment details or the GitHub README.
+
+## The data branch
+
+Both features above write to a single orphan branch (default `data`) that contains **only machine-generated files** — it never merges with `main`, so branch rulesets on `main` (PRs, tests, coverage) are unaffected:
+
+```
+data
+├── meta.json                    # categories, pinned posts, archivedAt
+├── profiles/
+│   ├── index.json               # login → rep map
+│   └── <login>/rep.json         # rep + action breakdown
+└── posts/
+    ├── index.json               # discussion list rows
+    └── <number>/content.json    # full archived thread
+```
+
+- **Zero setup**: the workflow force-pushes a fresh single-commit snapshot on every run, which *creates the branch automatically* if it doesn't exist. Enabling the feature and letting the workflow run once (or triggering **Data sync** manually from the Actions tab) is all it takes.
+- Every run rewrites the whole tree, so deleted posts and renamed users disappear without cleanup logic, and the branch never accumulates history.
+- **If you use repository rulesets**, make sure they target `main` (or otherwise exclude the data branch) — a ruleset covering all branches would block the workflow's push.
 
 ## Signing in
 
