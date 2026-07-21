@@ -38,6 +38,7 @@ Everything lives in [`forum.config.ts`](forum.config.ts). Every option is option
 | `badges` | Custom badges next to usernames, keyed by label: `{ 'Moderator': ['alice'], 'Contributor': ['bob', 'carol'] }` — users can hold several |
 | `content` | `pageSize`, `sort` (`CREATED_AT`/`UPDATED_AT`), `listExcerpts` (disable together with articles to skip fetching post bodies in lists), `articles.enabled` + `articles.marker`, `topics.include`/`topics.exclude` (category slugs), `topics.restricted` (announcement-format slugs where only maintainers can post — the UI hides posting there unless the signed-in user has write access) |
 | `features` | `search`, `reactions`, `upvotes` — toggle whole features off |
+| `rep` | Optional reputation system (off by default): `enabled`, `gains` (rep per `post`/`comment`/`answerAccepted`), `dailyCaps` (anti-farming, per UTC day, 0 = uncapped), `topics` (slug → min rep to post), `onViolation` (`move`/`lock`/`delete`), `fallbackTopic`, `exemptMaintainers`, `dataBranch` — see [Reputation system](#reputation-system) |
 | `cache` | `enabled` (default `true`), `ttlSeconds` (default `3600`) — stale-while-revalidate caching of GraphQL responses in `localStorage`: pages paint instantly from the last known data while a background request refreshes them; entries are versioned, scoped per signed-in user, invalidated on posting, and wiped on sign-out |
 | `theme` | Per-scheme CSS token overrides (`light`/`dark`): `background`, `foreground`, `muted`, `mutedForeground`, `card`, `cardForeground`, `border`, `primary`, `primaryForeground`, `accent`, `accentForeground`, `ring`, `link` |
 
@@ -55,6 +56,29 @@ export default defineForumConfig({
 ```
 
 If no repository is configured or detectable, the site renders a friendly setup screen instead of breaking.
+
+## Reputation system
+
+An optional rep system: users earn rep for forum activity, and topics can require a minimum rep to post — a middle ground between fully open topics and maintainer-only announcements. Off by default; enable it in [`forum.config.ts`](forum.config.ts):
+
+```ts
+rep: {
+	enabled: true,
+	gains: { post: 5, comment: 2, answerAccepted: 15 },
+	dailyCaps: { post: 25, comment: 10 },  // rep per UTC day, 0 = uncapped
+	topics: { showcase: 50 },              // slug → min rep to post
+	onViolation: 'move',                   // 'move' | 'lock' | 'delete'
+	fallbackTopic: 'general'
+}
+```
+
+How it works:
+
+- **The ledger** (`rep.json`) lives on a dedicated `rep-data` branch, maintained exclusively by the [`rep.yml`](.github/workflows/rep.yml) workflow. On every discussion/comment event it **recomputes rep from scratch** by scanning all forum activity — deterministic, idempotent, and self-healing (deleted content simply stops counting). The SPA reads the ledger from the branch's raw URL to show rep badges and gate the topic picker.
+- **Earning**: posts, comments, and accepted answers award rep. Daily caps (per UTC day, per action type) blunt farming; accepted answers are never capped since someone else grants them.
+- **Enforcement is reactive.** GitHub has no pre-post hook, so a low-rep user *can* momentarily post into a gated topic via github.com — the workflow then sweeps recent posts in gated topics and moves (default), locks, or deletes violations, leaving an explanatory comment. A post's own rep gain doesn't count toward clearing its own gate.
+- **Exemptions**: repository maintainers (unless `exemptMaintainers: false`) and configured `admins.logins` bypass rep gates.
+- **Caveats**: the raw-URL ledger is CDN-cached (~5 min lag); the enforcement sweep only looks at the last 48 hours, so if a maintainer moves a violating post *back* into a gated topic within that window the workflow will move it out again.
 
 ## Signing in
 

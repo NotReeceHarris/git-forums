@@ -1,12 +1,15 @@
 import { swr } from './cache';
 import { forumConfig } from './config';
 import { getOverview } from './github/api';
+import { auth } from './github/auth.svelte';
 import type {
 	Category,
 	DiscussionListItem,
 	DiscussionPage,
 	RepositoryPermission
 } from './github/types';
+import { repOf, requiredRep, type RepLedger } from './rep/engine';
+import { fetchLedger } from './rep/ledger';
 
 /** Small cross-component UI state */
 export const ui = $state({
@@ -17,7 +20,10 @@ export const ui = $state({
 	/** First page of the all-topics feed, shared by layout bootstrap and home */
 	home: null as DiscussionPage | null,
 	/** Discussions pinned on github.com, shown above regular lists */
-	pinned: [] as DiscussionListItem[]
+	pinned: [] as DiscussionListItem[],
+	/** Actions-maintained rep ledger (null until loaded / when unavailable) */
+	repLedger: null as RepLedger | null,
+	repLoaded: false
 });
 
 /**
@@ -52,13 +58,47 @@ export function isMaintainer(): boolean {
 	return ['WRITE', 'MAINTAIN', 'ADMIN'].includes(ui.viewerPermission);
 }
 
+/** Load the rep ledger once per session (no-op when the feature is off). */
+export async function loadRep(): Promise<void> {
+	if (!forumConfig.rep.enabled || ui.repLoaded) return;
+	ui.repLoaded = true;
+	ui.repLedger = await fetchLedger();
+}
+
+/** A user's rep for display; null when the feature is off or not yet loaded */
+export function repFor(login: string | null | undefined): number | null {
+	if (!forumConfig.rep.enabled || !ui.repLedger) return null;
+	return repOf(ui.repLedger, login);
+}
+
+/** Minimum rep required to post in a topic (0 = ungated) */
+export function repRequirement(slug: string): number {
+	return requiredRep(forumConfig.rep, slug);
+}
+
+/** Whether the signed-in user bypasses rep gates (maintainer/config admin) */
+function repExempt(): boolean {
+	return (
+		(forumConfig.rep.exemptMaintainers && isMaintainer()) || isAdmin(auth.viewer?.login)
+	);
+}
+
 /**
  * Whether the signed-in user may create a discussion in this category.
  * Restricted (announcement-format) categories require maintainer access;
- * GitHub enforces the same rule server-side.
+ * GitHub enforces the same rule server-side. Rep-gated topics additionally
+ * require the configured minimum rep — enforced reactively by the rep
+ * workflow, so this gate fails open while the ledger hasn't loaded.
  */
 export function canPostIn(category: Pick<Category, 'slug'>): boolean {
-	return !forumConfig.content.topics.restricted.includes(category.slug) || isMaintainer();
+	if (forumConfig.content.topics.restricted.includes(category.slug) && !isMaintainer()) {
+		return false;
+	}
+	const need = repRequirement(category.slug);
+	if (need > 0 && !repExempt() && ui.repLedger) {
+		return repOf(ui.repLedger, auth.viewer?.login) >= need;
+	}
+	return true;
 }
 
 /** Categories the signed-in user may post in */

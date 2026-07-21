@@ -10,7 +10,7 @@
 	import { isArticle, listDiscussions } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
 	import type { DiscussionListItem, PageInfo } from '$lib/github/types';
-	import { canPostIn, ui } from '$lib/ui.svelte';
+	import { canPostIn, repRequirement, ui } from '$lib/ui.svelte';
 
 	const category = $derived(ui.categories.find((c) => c.slug === page.params.slug));
 
@@ -115,12 +115,15 @@
 				New post
 			</a>
 		{:else}
+			{@const restricted = forumConfig.content.topics.restricted.includes(category.slug)}
 			<span
 				class="inline-flex items-center gap-1.5 rounded-lg border border-fd-border px-3 py-1.5 text-sm text-fd-muted-foreground"
-				title="Only repository maintainers can post in this topic"
+				title={restricted
+					? 'Only repository maintainers can post in this topic'
+					: `Posting here requires ${repRequirement(category.slug)} reputation`}
 			>
 				<svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-				Maintainers only
+				{restricted ? 'Maintainers only' : `Requires ${repRequirement(category.slug)} rep`}
 			</span>
 		{/if}
 	</div>

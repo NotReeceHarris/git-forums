@@ -9,6 +9,7 @@
 	import { forumConfig } from '$lib/config';
 	import { getUserProfile, listUserDiscussions, renderMarkdown } from '$lib/github/api';
 	import { auth } from '$lib/github/auth.svelte';
+	import { repFor } from '$lib/ui.svelte';
 	import type { UserProfile } from '$lib/github/types';
 	import { excerpt, formatDate, timeAgo } from '$lib/utils';
 
@@ -135,6 +136,12 @@
 					<strong class="font-semibold text-fd-foreground">{profile.comments.totalCount}</strong>
 					{profile.comments.totalCount === 1 ? 'comment' : 'comments'}
 				</span>
+				{#if repFor(profile.login) !== null}
+					<span title="Reputation earned on this forum">
+						<strong class="font-semibold text-fd-foreground">{repFor(profile.login)}</strong>
+						rep
+					</span>
+				{/if}
 				<span title={formatDate(profile.createdAt)}>
 					Joined GitHub {formatDate(profile.createdAt)}
 				</span>
