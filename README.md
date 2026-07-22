@@ -1,14 +1,15 @@
 # Discussion Kit
 
-![Codecov](https://img.shields.io/codecov/c/github/NotReeceHarris/discussion-kit)
-
-
-[![Follow us on product hunt](https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1273493&theme=light&size=small)](https://www.producthunt.com/products/git-forum?utm_source=badge-follow&utm_medium=badge&utm_source=badge-git&#0045;forum)
-
+![Codecov](https://img.shields.io/codecov/c/github/NotReeceHarris/discussion-kit?style=flat)
+![GitHub License](https://img.shields.io/github/license/NotReeceHarris/discussion-kit?style=flat)
+![GitHub Repo stars](https://img.shields.io/github/stars/NotReeceHarris/discussion-kit?style=flat)
+![GitHub Repo stars](https://img.shields.io/github/forks/NotReeceHarris/discussion-kit?style=flat)
 
 A fully featured forum site powered entirely by **GitHub Discussions** — no backend, no database. It builds to plain static files and runs on **GitHub Pages**. Built with **SvelteKit** (Svelte 5) and **Tailwind CSS v4**.
 
 Deep-dive documentation lives in [`docs/`](docs/README.md) — architecture, [data syncing](docs/data-sync.md) (with flow diagram), [reputation](docs/reputation.md), and the [read-only archive](docs/archive.md).
+
+[![Follow us on product hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1200822&amp;theme=light&amp;t=1784712347238)](https://www.producthunt.com/products/git-forum?utm_source=badge-follow&utm_medium=badge&utm_source=badge-git&#0045;forum)
 
 ## How it works
 
