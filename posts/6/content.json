@@ -1,0 +1,166 @@
+{
+	"id": "D_kwDOTdVZjs4An5NL",
+	"number": 6,
+	"title": "test3",
+	"body": "test5",
+	"bodyHTML": "<p dir=\"auto\">test5</p>",
+	"url": "https://github.com/NotReeceHarris/discussion-kit/discussions/6",
+	"createdAt": "2026-07-19T20:46:40Z",
+	"lastEditedAt": null,
+	"upvoteCount": 1,
+	"viewerHasUpvoted": false,
+	"locked": false,
+	"author": {
+		"login": "NotReeceHarris",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+		"url": "https://github.com/NotReeceHarris"
+	},
+	"category": {
+		"id": "DIC_kwDOTdVZjs4DBhxx",
+		"name": "General",
+		"slug": "general",
+		"emojiHTML": "<div>💬</div>",
+		"description": "Chat about anything and everything here",
+		"isAnswerable": false
+	},
+	"reactionGroups": [
+		{
+			"content": "THUMBS_UP",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "THUMBS_DOWN",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "LAUGH",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HOORAY",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "CONFUSED",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HEART",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "ROCKET",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "EYES",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		}
+	],
+	"comments": {
+		"totalCount": 1,
+		"pageInfo": {
+			"endCursor": null,
+			"hasNextPage": false
+		},
+		"nodes": [
+			{
+				"id": "DC_kwDOTdVZjs4BDl3v",
+				"bodyHTML": "<p dir=\"auto\">test</p>",
+				"createdAt": "2026-07-21T15:09:06Z",
+				"isAnswer": false,
+				"author": {
+					"login": "doodadlabs-bot",
+					"avatarUrl": "https://avatars.githubusercontent.com/u/268667897?u=a601d68f88456691d97ab4ef45ad76569e88f01b&v=4",
+					"url": "https://github.com/doodadlabs-bot"
+				},
+				"reactionGroups": [
+					{
+						"content": "THUMBS_UP",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "THUMBS_DOWN",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "LAUGH",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "HOORAY",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "CONFUSED",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "HEART",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "ROCKET",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "EYES",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					}
+				],
+				"replies": {
+					"totalCount": 0,
+					"nodes": []
+				}
+			}
+		]
+	}
+}

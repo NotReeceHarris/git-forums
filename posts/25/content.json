@@ -1,0 +1,92 @@
+{
+	"id": "D_kwDOTdVZjs4An9XG",
+	"number": 25,
+	"title": "We just launched on Product Hunt!",
+	"body": "Hey everyone — big news: **Discussion Kit** is officially live on Product Hunt today!\n\nIf you're not familiar, Discussion Kit is a SvelteKit-powered forum template that uses **GitHub Discussions** as the backend — no server, no database, no auth system to maintain. Just point it at your repo's Discussions tab and you've got a fast, static forum site deployable straight to GitHub Pages, with GitHub handling replies, reactions, and moderation for you.\n\nThis forum you're posting in right now is literally running on it 👀\n\nIf you've found it useful (or even just mildly interesting), an upvote would mean a lot: 👉 [producthunt.com/products/git-forum](https://www.producthunt.com/products/git-forum)\n\nWould love to hear feedback, feature requests, or just general roasting in the replies.",
+	"bodyHTML": "<p dir=\"auto\">Hey everyone — big news: <strong>Discussion Kit</strong> is officially live on Product Hunt today!</p>\n<p dir=\"auto\">If you're not familiar, Discussion Kit is a SvelteKit-powered forum template that uses <strong>GitHub Discussions</strong> as the backend — no server, no database, no auth system to maintain. Just point it at your repo's Discussions tab and you've got a fast, static forum site deployable straight to GitHub Pages, with GitHub handling replies, reactions, and moderation for you.</p>\n<p dir=\"auto\">This forum you're posting in right now is literally running on it 👀</p>\n<p dir=\"auto\">If you've found it useful (or even just mildly interesting), an upvote would mean a lot: 👉 <a href=\"https://www.producthunt.com/products/git-forum\" rel=\"nofollow\">producthunt.com/products/git-forum</a></p>\n<p dir=\"auto\">Would love to hear feedback, feature requests, or just general roasting in the replies.</p>",
+	"url": "https://github.com/NotReeceHarris/discussion-kit/discussions/25",
+	"createdAt": "2026-07-22T09:24:30Z",
+	"lastEditedAt": null,
+	"upvoteCount": 1,
+	"viewerHasUpvoted": false,
+	"locked": false,
+	"author": {
+		"login": "NotReeceHarris",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+		"url": "https://github.com/NotReeceHarris"
+	},
+	"category": {
+		"id": "DIC_kwDOTdVZjs4DBhxw",
+		"name": "Announcements",
+		"slug": "announcements",
+		"emojiHTML": "<div>📣</div>",
+		"description": "Updates from maintainers",
+		"isAnswerable": false
+	},
+	"reactionGroups": [
+		{
+			"content": "THUMBS_UP",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "THUMBS_DOWN",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "LAUGH",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HOORAY",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 1
+			}
+		},
+		{
+			"content": "CONFUSED",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HEART",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "ROCKET",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "EYES",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		}
+	],
+	"comments": {
+		"totalCount": 0,
+		"pageInfo": {
+			"endCursor": null,
+			"hasNextPage": false
+		},
+		"nodes": []
+	}
+}

@@ -1,0 +1,159 @@
+{
+	"archivedAt": "2026-07-24T19:22:12.512Z",
+	"discussions": [
+		{
+			"id": "D_kwDOTdVZjs4An9XG",
+			"number": 25,
+			"title": "We just launched on Product Hunt!",
+			"body": "Hey everyone — big news: **Discussion Kit** is officially live on Product Hunt today!\n\nIf you're not familiar, Discussion Kit is a SvelteKit-powered forum template that uses **GitHub Discussions** as the backend — no server, no database, no auth system to maintain. Just point it at your repo's Discussions tab and you've got a fast, static forum site deployable straight to GitHub Pages, with GitHub handling replies, reactions, and moderation for you.\n\nThis forum you're posting in right now is literally running on it 👀\n\nIf you've found it useful (or even just mildly interesting), an upvote would mean a lot: 👉 [producthunt.com/products/git-forum](https://www.producthunt.com/products/git-forum)\n\nWould love to hear feedback, feature requests, or just general roasting in the replies.",
+			"createdAt": "2026-07-22T09:24:30Z",
+			"upvoteCount": 1,
+			"author": {
+				"login": "NotReeceHarris",
+				"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+				"url": "https://github.com/NotReeceHarris"
+			},
+			"category": {
+				"id": "DIC_kwDOTdVZjs4DBhxw",
+				"name": "Announcements",
+				"slug": "announcements",
+				"emojiHTML": "<div>📣</div>"
+			},
+			"comments": {
+				"totalCount": 0
+			}
+		},
+		{
+			"id": "D_kwDOTdVZjs4An8M-",
+			"number": 19,
+			"title": "Anonymous viewing, Reputation, Profiles",
+			"body": "## What's Changed\r\n* Implement user profile page and enhance API handling by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/11\r\n* Add Contributor Covenant Code of Conduct by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/12\r\n* Implement configurable reputation system with UI integration by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/14\r\n* Implement cold-store archive with read-only mode for visitors by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/16\r\n* Add comprehensive documentation for architecture and data systems by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/18\r\n\r\n\r\n**Full Changelog**: https://github.com/NotReeceHarris/discussion-kit/compare/v0.1.0...v0.2.0\n\n<hr /><em>This discussion was created from the release <a href='https://github.com/NotReeceHarris/discussion-kit/releases/tag/v0.2.0'>Anonymous viewing, Reputation, Profiles</a>.</em>",
+			"createdAt": "2026-07-21T17:04:45Z",
+			"upvoteCount": 1,
+			"author": {
+				"login": "NotReeceHarris",
+				"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+				"url": "https://github.com/NotReeceHarris"
+			},
+			"category": {
+				"id": "DIC_kwDOTdVZjs4DBhxw",
+				"name": "Announcements",
+				"slug": "announcements",
+				"emojiHTML": "<div>📣</div>"
+			},
+			"comments": {
+				"totalCount": 0
+			}
+		},
+		{
+			"id": "D_kwDOTdVZjs4An8Lh",
+			"number": 17,
+			"title": "test rep and store",
+			"body": "this is a test",
+			"createdAt": "2026-07-21T16:48:27Z",
+			"upvoteCount": 1,
+			"author": {
+				"login": "NotReeceHarris",
+				"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+				"url": "https://github.com/NotReeceHarris"
+			},
+			"category": {
+				"id": "DIC_kwDOTdVZjs4DBhxx",
+				"name": "General",
+				"slug": "general",
+				"emojiHTML": "<div>💬</div>"
+			},
+			"comments": {
+				"totalCount": 0
+			}
+		},
+		{
+			"id": "D_kwDOTdVZjs4An5Ql",
+			"number": 10,
+			"title": "Initial Release (0.1.0)",
+			"body": "## What's Changed\r\n* Rename project to Discussion Kit and update configurations by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/5\r\n* Refactor authentication and improve discussion loading logic by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/7\r\n* Implement moderation features and discussion management capabilities by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/9\r\n\r\n## New Contributors\r\n* @NotReeceHarris made their first contribution in https://github.com/NotReeceHarris/discussion-kit/pull/5\r\n\r\n**Full Changelog**: https://github.com/NotReeceHarris/discussion-kit/commits/v0.1.0\n\n<hr /><em>This discussion was created from the release <a href='https://github.com/NotReeceHarris/discussion-kit/releases/tag/v0.1.0'>Initial Release (0.1.0)</a>.</em>",
+			"createdAt": "2026-07-19T22:28:08Z",
+			"upvoteCount": 1,
+			"author": {
+				"login": "NotReeceHarris",
+				"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+				"url": "https://github.com/NotReeceHarris"
+			},
+			"category": {
+				"id": "DIC_kwDOTdVZjs4DBhxw",
+				"name": "Announcements",
+				"slug": "announcements",
+				"emojiHTML": "<div>📣</div>"
+			},
+			"comments": {
+				"totalCount": 2
+			}
+		},
+		{
+			"id": "D_kwDOTdVZjs4An5OB",
+			"number": 8,
+			"title": "test",
+			"body": "test3f",
+			"createdAt": "2026-07-19T21:11:46Z",
+			"upvoteCount": 1,
+			"author": {
+				"login": "doodadlabs-bot",
+				"avatarUrl": "https://avatars.githubusercontent.com/u/268667897?u=a601d68f88456691d97ab4ef45ad76569e88f01b&v=4",
+				"url": "https://github.com/doodadlabs-bot"
+			},
+			"category": {
+				"id": "DIC_kwDOTdVZjs4DBhxx",
+				"name": "General",
+				"slug": "general",
+				"emojiHTML": "<div>💬</div>"
+			},
+			"comments": {
+				"totalCount": 0
+			}
+		},
+		{
+			"id": "D_kwDOTdVZjs4An5NL",
+			"number": 6,
+			"title": "test3",
+			"body": "test5",
+			"createdAt": "2026-07-19T20:46:40Z",
+			"upvoteCount": 1,
+			"author": {
+				"login": "NotReeceHarris",
+				"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+				"url": "https://github.com/NotReeceHarris"
+			},
+			"category": {
+				"id": "DIC_kwDOTdVZjs4DBhxx",
+				"name": "General",
+				"slug": "general",
+				"emojiHTML": "<div>💬</div>"
+			},
+			"comments": {
+				"totalCount": 1
+			}
+		},
+		{
+			"id": "D_kwDOTdVZjs4An5Dv",
+			"number": 2,
+			"title": "DJ Kaled",
+			"body": "![](https://media2.dev.to/dynamic/image/width=1000,height=420,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.us-east-2.amazonaws.com%2Fuploads%2Farticles%2F8rbdtebvw9ka1877bevl.png)",
+			"createdAt": "2026-07-19T16:52:48Z",
+			"upvoteCount": 1,
+			"author": {
+				"login": "NotDevenBriers",
+				"avatarUrl": "https://avatars.githubusercontent.com/u/83955983?u=7d48281faa97e7f29141cc40123c0e7f8a0c957e&v=4",
+				"url": "https://github.com/NotDevenBriers"
+			},
+			"category": {
+				"id": "DIC_kwDOTdVZjs4DBhxx",
+				"name": "General",
+				"slug": "general",
+				"emojiHTML": "<div>💬</div>"
+			},
+			"comments": {
+				"totalCount": 1
+			}
+		}
+	]
+}

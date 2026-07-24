@@ -1,0 +1,239 @@
+{
+	"id": "D_kwDOTdVZjs4An5Ql",
+	"number": 10,
+	"title": "Initial Release (0.1.0)",
+	"body": "## What's Changed\r\n* Rename project to Discussion Kit and update configurations by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/5\r\n* Refactor authentication and improve discussion loading logic by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/7\r\n* Implement moderation features and discussion management capabilities by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/9\r\n\r\n## New Contributors\r\n* @NotReeceHarris made their first contribution in https://github.com/NotReeceHarris/discussion-kit/pull/5\r\n\r\n**Full Changelog**: https://github.com/NotReeceHarris/discussion-kit/commits/v0.1.0\n\n<hr /><em>This discussion was created from the release <a href='https://github.com/NotReeceHarris/discussion-kit/releases/tag/v0.1.0'>Initial Release (0.1.0)</a>.</em>",
+	"bodyHTML": "<h2 dir=\"auto\">What's Changed</h2>\n<ul dir=\"auto\">\n<li>Rename project to Discussion Kit and update configurations by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4924254861\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/5\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/5/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/5\">#5</a></li>\n<li>Refactor authentication and improve discussion loading logic by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4924392385\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/7\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/7/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/7\">#7</a></li>\n<li>Implement moderation features and discussion management capabilities by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4924591067\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/9\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/9/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/9\">#9</a></li>\n</ul>\n<h2 dir=\"auto\">New Contributors</h2>\n<ul dir=\"auto\">\n<li><a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> made their first contribution in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4924254861\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/5\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/5/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/5\">#5</a></li>\n</ul>\n<p dir=\"auto\"><strong>Full Changelog</strong>: <a href=\"https://github.com/NotReeceHarris/discussion-kit/commits/v0.1.0\">https://github.com/NotReeceHarris/discussion-kit/commits/v0.1.0</a></p>\n<hr><em>This discussion was created from the release <a href=\"https://github.com/NotReeceHarris/discussion-kit/releases/tag/v0.1.0\">Initial Release (0.1.0)</a>.</em>",
+	"url": "https://github.com/NotReeceHarris/discussion-kit/discussions/10",
+	"createdAt": "2026-07-19T22:28:08Z",
+	"lastEditedAt": null,
+	"upvoteCount": 1,
+	"viewerHasUpvoted": false,
+	"locked": false,
+	"author": {
+		"login": "NotReeceHarris",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+		"url": "https://github.com/NotReeceHarris"
+	},
+	"category": {
+		"id": "DIC_kwDOTdVZjs4DBhxw",
+		"name": "Announcements",
+		"slug": "announcements",
+		"emojiHTML": "<div>📣</div>",
+		"description": "Updates from maintainers",
+		"isAnswerable": false
+	},
+	"reactionGroups": [
+		{
+			"content": "THUMBS_UP",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "THUMBS_DOWN",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "LAUGH",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HOORAY",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "CONFUSED",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HEART",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "ROCKET",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "EYES",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		}
+	],
+	"comments": {
+		"totalCount": 2,
+		"pageInfo": {
+			"endCursor": null,
+			"hasNextPage": false
+		},
+		"nodes": [
+			{
+				"id": "DC_kwDOTdVZjs4BDo_w",
+				"bodyHTML": "<p dir=\"auto\">test</p>",
+				"createdAt": "2026-07-22T09:10:32Z",
+				"isAnswer": false,
+				"author": {
+					"login": "NotReeceHarris",
+					"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+					"url": "https://github.com/NotReeceHarris"
+				},
+				"reactionGroups": [
+					{
+						"content": "THUMBS_UP",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "THUMBS_DOWN",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "LAUGH",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "HOORAY",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "CONFUSED",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "HEART",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "ROCKET",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "EYES",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					}
+				],
+				"replies": {
+					"totalCount": 0,
+					"nodes": []
+				}
+			},
+			{
+				"id": "DC_kwDOTdVZjs4BDo_y",
+				"bodyHTML": "<p dir=\"auto\">test 2</p>",
+				"createdAt": "2026-07-22T09:10:39Z",
+				"isAnswer": false,
+				"author": {
+					"login": "NotReeceHarris",
+					"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+					"url": "https://github.com/NotReeceHarris"
+				},
+				"reactionGroups": [
+					{
+						"content": "THUMBS_UP",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "THUMBS_DOWN",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "LAUGH",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "HOORAY",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "CONFUSED",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "HEART",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "ROCKET",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "EYES",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					}
+				],
+				"replies": {
+					"totalCount": 0,
+					"nodes": []
+				}
+			}
+		]
+	}
+}

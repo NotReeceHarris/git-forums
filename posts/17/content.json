@@ -1,0 +1,92 @@
+{
+	"id": "D_kwDOTdVZjs4An8Lh",
+	"number": 17,
+	"title": "test rep and store",
+	"body": "this is a test",
+	"bodyHTML": "<p dir=\"auto\">this is a test</p>",
+	"url": "https://github.com/NotReeceHarris/discussion-kit/discussions/17",
+	"createdAt": "2026-07-21T16:48:27Z",
+	"lastEditedAt": null,
+	"upvoteCount": 1,
+	"viewerHasUpvoted": false,
+	"locked": false,
+	"author": {
+		"login": "NotReeceHarris",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+		"url": "https://github.com/NotReeceHarris"
+	},
+	"category": {
+		"id": "DIC_kwDOTdVZjs4DBhxx",
+		"name": "General",
+		"slug": "general",
+		"emojiHTML": "<div>💬</div>",
+		"description": "Chat about anything and everything here",
+		"isAnswerable": false
+	},
+	"reactionGroups": [
+		{
+			"content": "THUMBS_UP",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "THUMBS_DOWN",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "LAUGH",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HOORAY",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "CONFUSED",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HEART",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "ROCKET",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "EYES",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		}
+	],
+	"comments": {
+		"totalCount": 0,
+		"pageInfo": {
+			"endCursor": null,
+			"hasNextPage": false
+		},
+		"nodes": []
+	}
+}

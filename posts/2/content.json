@@ -1,0 +1,235 @@
+{
+	"id": "D_kwDOTdVZjs4An5Dv",
+	"number": 2,
+	"title": "DJ Kaled",
+	"body": "![](https://media2.dev.to/dynamic/image/width=1000,height=420,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.us-east-2.amazonaws.com%2Fuploads%2Farticles%2F8rbdtebvw9ka1877bevl.png)",
+	"bodyHTML": "<p dir=\"auto\"><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://camo.githubusercontent.com/98da5e2cb94da0a1a935cbe503dafc14345825da3b0fc51d09eceb10f8e7367b/68747470733a2f2f6d65646961322e6465762e746f2f64796e616d69632f696d6167652f77696474683d313030302c6865696768743d3432302c6669743d636f7665722c677261766974793d6175746f2c666f726d61743d6175746f2f68747470732533412532462532466465762d746f2d75706c6f6164732e73332e75732d656173742d322e616d617a6f6e6177732e636f6d25324675706c6f61647325324661727469636c6573253246387262647465627677396b61313837376265766c2e706e67\"><img src=\"https://camo.githubusercontent.com/98da5e2cb94da0a1a935cbe503dafc14345825da3b0fc51d09eceb10f8e7367b/68747470733a2f2f6d65646961322e6465762e746f2f64796e616d69632f696d6167652f77696474683d313030302c6865696768743d3432302c6669743d636f7665722c677261766974793d6175746f2c666f726d61743d6175746f2f68747470732533412532462532466465762d746f2d75706c6f6164732e73332e75732d656173742d322e616d617a6f6e6177732e636f6d25324675706c6f61647325324661727469636c6573253246387262647465627677396b61313837376265766c2e706e67\" alt=\"\" data-canonical-src=\"https://media2.dev.to/dynamic/image/width=1000,height=420,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.us-east-2.amazonaws.com%2Fuploads%2Farticles%2F8rbdtebvw9ka1877bevl.png\" style=\"max-width: 100%;\"></a></p>",
+	"url": "https://github.com/NotReeceHarris/discussion-kit/discussions/2",
+	"createdAt": "2026-07-19T16:52:48Z",
+	"lastEditedAt": "2026-07-19T22:23:16Z",
+	"upvoteCount": 1,
+	"viewerHasUpvoted": false,
+	"locked": false,
+	"author": {
+		"login": "NotDevenBriers",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/83955983?u=7d48281faa97e7f29141cc40123c0e7f8a0c957e&v=4",
+		"url": "https://github.com/NotDevenBriers"
+	},
+	"category": {
+		"id": "DIC_kwDOTdVZjs4DBhxx",
+		"name": "General",
+		"slug": "general",
+		"emojiHTML": "<div>💬</div>",
+		"description": "Chat about anything and everything here",
+		"isAnswerable": false
+	},
+	"reactionGroups": [
+		{
+			"content": "THUMBS_UP",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "THUMBS_DOWN",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "LAUGH",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HOORAY",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "CONFUSED",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HEART",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "ROCKET",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "EYES",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		}
+	],
+	"comments": {
+		"totalCount": 1,
+		"pageInfo": {
+			"endCursor": null,
+			"hasNextPage": false
+		},
+		"nodes": [
+			{
+				"id": "DC_kwDOTdVZjs4BDe4p",
+				"bodyHTML": "<p dir=\"auto\">test</p>",
+				"createdAt": "2026-07-19T16:53:12Z",
+				"isAnswer": false,
+				"author": {
+					"login": "admin",
+					"avatarUrl": "https://avatars.githubusercontent.com/u/10137?u=b1951d34a583cf12ec0d3b0781ba19be97726318&v=4",
+					"url": "https://github.com/admin"
+				},
+				"reactionGroups": [
+					{
+						"content": "THUMBS_UP",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "THUMBS_DOWN",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "LAUGH",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 1
+						}
+					},
+					{
+						"content": "HOORAY",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "CONFUSED",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "HEART",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "ROCKET",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					},
+					{
+						"content": "EYES",
+						"viewerHasReacted": false,
+						"reactors": {
+							"totalCount": 0
+						}
+					}
+				],
+				"replies": {
+					"totalCount": 1,
+					"nodes": [
+						{
+							"id": "DC_kwDOTdVZjs4BDe4q",
+							"bodyHTML": "<p dir=\"auto\">test</p>",
+							"createdAt": "2026-07-19T16:53:24Z",
+							"author": {
+								"login": "NotReeceHarris",
+								"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+								"url": "https://github.com/NotReeceHarris"
+							},
+							"reactionGroups": [
+								{
+									"content": "THUMBS_UP",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 0
+									}
+								},
+								{
+									"content": "THUMBS_DOWN",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 0
+									}
+								},
+								{
+									"content": "LAUGH",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 0
+									}
+								},
+								{
+									"content": "HOORAY",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 0
+									}
+								},
+								{
+									"content": "CONFUSED",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 0
+									}
+								},
+								{
+									"content": "HEART",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 1
+									}
+								},
+								{
+									"content": "ROCKET",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 0
+									}
+								},
+								{
+									"content": "EYES",
+									"viewerHasReacted": false,
+									"reactors": {
+										"totalCount": 0
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		]
+	}
+}

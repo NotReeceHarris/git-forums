@@ -1,0 +1,92 @@
+{
+	"id": "D_kwDOTdVZjs4An8M-",
+	"number": 19,
+	"title": "Anonymous viewing, Reputation, Profiles",
+	"body": "## What's Changed\r\n* Implement user profile page and enhance API handling by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/11\r\n* Add Contributor Covenant Code of Conduct by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/12\r\n* Implement configurable reputation system with UI integration by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/14\r\n* Implement cold-store archive with read-only mode for visitors by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/16\r\n* Add comprehensive documentation for architecture and data systems by @NotReeceHarris in https://github.com/NotReeceHarris/discussion-kit/pull/18\r\n\r\n\r\n**Full Changelog**: https://github.com/NotReeceHarris/discussion-kit/compare/v0.1.0...v0.2.0\n\n<hr /><em>This discussion was created from the release <a href='https://github.com/NotReeceHarris/discussion-kit/releases/tag/v0.2.0'>Anonymous viewing, Reputation, Profiles</a>.</em>",
+	"bodyHTML": "<h2 dir=\"auto\">What's Changed</h2>\n<ul dir=\"auto\">\n<li>Implement user profile page and enhance API handling by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4940358735\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/11\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/11/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/11\">#11</a></li>\n<li>Add Contributor Covenant Code of Conduct by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4940519499\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/12\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/12/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/12\">#12</a></li>\n<li>Implement configurable reputation system with UI integration by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4940821953\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/14\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/14/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/14\">#14</a></li>\n<li>Implement cold-store archive with read-only mode for visitors by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4941130483\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/16\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/16/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/16\">#16</a></li>\n<li>Add comprehensive documentation for architecture and data systems by <a class=\"user-mention notranslate\" data-hovercard-type=\"user\" data-hovercard-url=\"/users/NotReeceHarris/hovercard\" data-octo-click=\"hovercard-link-click\" data-octo-dimensions=\"link_type:self\" href=\"https://github.com/NotReeceHarris\">@NotReeceHarris</a> in <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"4941245848\" data-permission-text=\"Title is private\" data-url=\"https://github.com/NotReeceHarris/discussion-kit/issues/18\" data-hovercard-type=\"pull_request\" data-hovercard-url=\"/NotReeceHarris/discussion-kit/pull/18/hovercard\" href=\"https://github.com/NotReeceHarris/discussion-kit/pull/18\">#18</a></li>\n</ul>\n<p dir=\"auto\"><strong>Full Changelog</strong>: <a class=\"commit-link\" href=\"https://github.com/NotReeceHarris/discussion-kit/compare/v0.1.0...v0.2.0\"><tt>v0.1.0...v0.2.0</tt></a></p>\n<hr><em>This discussion was created from the release <a href=\"https://github.com/NotReeceHarris/discussion-kit/releases/tag/v0.2.0\">Anonymous viewing, Reputation, Profiles</a>.</em>",
+	"url": "https://github.com/NotReeceHarris/discussion-kit/discussions/19",
+	"createdAt": "2026-07-21T17:04:45Z",
+	"lastEditedAt": null,
+	"upvoteCount": 1,
+	"viewerHasUpvoted": false,
+	"locked": false,
+	"author": {
+		"login": "NotReeceHarris",
+		"avatarUrl": "https://avatars.githubusercontent.com/u/74247548?u=dcb8b2a19b985237479bcbffc5a7076d2f85d2a7&v=4",
+		"url": "https://github.com/NotReeceHarris"
+	},
+	"category": {
+		"id": "DIC_kwDOTdVZjs4DBhxw",
+		"name": "Announcements",
+		"slug": "announcements",
+		"emojiHTML": "<div>📣</div>",
+		"description": "Updates from maintainers",
+		"isAnswerable": false
+	},
+	"reactionGroups": [
+		{
+			"content": "THUMBS_UP",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "THUMBS_DOWN",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "LAUGH",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HOORAY",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "CONFUSED",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "HEART",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "ROCKET",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		},
+		{
+			"content": "EYES",
+			"viewerHasReacted": false,
+			"reactors": {
+				"totalCount": 0
+			}
+		}
+	],
+	"comments": {
+		"totalCount": 0,
+		"pageInfo": {
+			"endCursor": null,
+			"hasNextPage": false
+		},
+		"nodes": []
+	}
+}
